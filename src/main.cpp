@@ -168,16 +168,9 @@ unsigned long checkLastTime, switchLastTime;
 
 void loop()
 {
-//  if (WiFi.status() != WL_CONNECTED) {
-//    Serial.println("Wifi lost... reconnecting!");
-//    delay(2000);
-//    setupWifi();
-//  } 
   
   loopDisplay();
   if(!loopOTA()){
-
- //   if (WiFi.status() == WL_CONNECTED) events();
 
     if(millis() - checkLastTime > 5000){
         if(curTemp - myConfig.get()->tempPrecision < TARGET_TEMP && millis() - switchLastTime > myConfig.get()->minSwitchTime * 1000){
