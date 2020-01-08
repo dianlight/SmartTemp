@@ -8,7 +8,7 @@ include <096OledDim.scad>;
 
 
 renderNop = false;
-nutmount = false;
+nutmount = true;
 
 $fn=60;
 
