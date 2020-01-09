@@ -3,7 +3,8 @@
 #include <PubSubClient.h>
 
 #include "Config.h"
-//#include <Ticker.h>
+#include "Display.h"
+#include <Ticker.h>
 #ifdef ENABLE_MENU
   #include <menu.h>
   #include <menuIO/u8g2Out.h>
@@ -16,6 +17,12 @@
   #include "at8i2cGateway.h"  
 #endif
 #include <Wire.h>
+
+#ifdef DEBUG_REMOTE
+  #include <RemoteDebug.h>
+  extern RemoteDebug Debug;
+#endif
+
 
 #include "MyTimeNTP.h"
 //#include <ezTime.h>
@@ -208,10 +215,37 @@ int8_t lastEncPosition =0;
   }
 #endif // ENABLE_MENU
 
+Ticker sleepModeTicker;
+static time_t lastAction;
+static bool psMode = false;
+
+void sleepModeDislay(){
+  if(millis() - lastAction > myConfig.get() -> displayPowerOff * 1000 ){
+    u8g2.setPowerSave(1);
+    #ifdef DEBUG_REMOTE
+      debugV("PowerOff Display");
+    #endif
+    psMode=true;
+  } else if(millis() - lastAction > myConfig.get() -> displaySleep * 1000 ){
+    uint8_t ctn = map((millis() - lastAction)/1000,myConfig.get() -> displaySleep,myConfig.get() -> displayPowerOff,myConfig.get() -> displayContrast/2,0);
+    u8g2.setContrast(ctn);
+    #ifdef DEBUG_REMOTE
+      debugV("Display Power %d",ctn);
+    #endif
+    psMode=true;
+  } else {
+    psMode=false;
+  }
+
+}
+
 void setupDisplay() {
       u8g2.begin();
       u8g2.enableUTF8Print();
       u8g2.setFont(fontName);
+      lastAction=millis();
+      sleepModeTicker.attach_scheduled(myConfig.get() -> displaySleep / 3,sleepModeDislay);
+
       u8g2.firstPage();
       do {
           u8g2.drawUTF8(0,16,"Please wait...");
@@ -240,25 +274,39 @@ void loopDisplay() {
     if( nav.sleepTask ){
   #endif // ENABLE_MENU  
 
-    if( at8gw.getEncoder() > lastEncPosition){
+    if( at8gw.getEncoder() > lastEncPosition && !psMode){
       myConfig.get()->mode= Config::MODES::MANUAL;
       myConfig.get()->hold= (myConfig.get()->hold+1) %  Config::HOLDS::H_SIZE;
       lastEncPosition = at8gw.getEncoder();
+      lastAction=millis();
       myConfig.saveConfig();
-    } else if ( at8gw.getEncoder() < lastEncPosition){
+    } else if ( at8gw.getEncoder() < lastEncPosition && !psMode){
       myConfig.get()->mode= Config::MODES::MANUAL;
       myConfig.get()->hold= abs(myConfig.get()->hold-1) %  Config::HOLDS::H_SIZE;
       lastEncPosition = at8gw.getEncoder();
+      lastAction=millis();
       myConfig.saveConfig();
+    } else if ( at8gw.getEncoder() != lastEncPosition ){
+      psMode = false;
+      u8g2.setPowerSave(0);
+      u8g2.setContrast(myConfig.get() -> displayContrast);
+      lastAction=millis();
+      lastEncPosition = at8gw.getEncoder();
     }
 
+  #ifdef ENABLE_MENU
     if( at8gw.getEncoderButton() == 3 && myConfig.get()->mode != Config::MODES::AUTO && ( millis() - lastBtnTime ) > 3000){ // Hold
+  #else  
+    if( at8gw.getEncoderButton() == 5 && myConfig.get()->mode != Config::MODES::AUTO ){ // Click
+  #endif  
       myConfig.get()->mode = Config::MODES::AUTO;
       lastBtnTime = millis();
+      lastAction=millis();
       myConfig.saveConfig();
     } else if( at8gw.getEncoderButton() == 3 && myConfig.get()->mode == Config::MODES::AUTO && ( millis() - lastBtnTime ) > 3000){ // Hold
       myConfig.get()->away = !myConfig.get()->away;
       lastBtnTime = millis();
+      lastAction=millis();
       myConfig.saveConfig();
     }
 
@@ -319,7 +367,7 @@ void loopDisplay() {
         u8g2.printf("%s",CURRENT_HOLD_STR);
         u8g2.setCursor(128-45,63);
 //        u8g2.printf("%s",myTZ.dateTime(String("D H")+(blink?":":" ")+"i").c_str()); //G
-        u8g2.printf("%d %d:%d",getNTPTime()->tm_wday,getNTPTime()->tm_hour, getNTPTime()->tm_min);
+        u8g2.printf("%s %.2d:%.2d",DAYSNAME[getNTPTime()->tm_wday].c_str(),getNTPTime()->tm_hour, getNTPTime()->tm_min);
 
 
         // Main display
@@ -370,6 +418,7 @@ void loopDisplay() {
     } while ( u8g2.nextPage() );
   #ifdef ENABLE_MENU  
     } else if (nav.changed(0)) {
+        lastAction=millis();
         //only draw if menu changed for gfx device
         //change checking leaves more time for other tasks
         u8g2.setFont(u8g2_font_5x7_mf);
@@ -401,30 +450,34 @@ void  bootConnectedDisplay(){
 }
 
 void displayError(String Error){
-      u8g2.setFont(fontName);
-      u8g2.clearBuffer();
-      u8g2.firstPage();
-      do {
-          u8g2.drawUTF8(0,18,Error.c_str());
-      } while ( u8g2.nextPage() );    
+  u8g2.setPowerSave(0);
+  u8g2.setContrast(myConfig.get() -> displayContrast);
+  u8g2.setFont(fontName);
+  u8g2.clearBuffer();
+  u8g2.firstPage();
+  do {
+      u8g2.drawUTF8(0,18,Error.c_str());
+  } while ( u8g2.nextPage() );    
 }
 
 void clearDisplay() {
-    u8g2.clear();
+  u8g2.clear();
 };
 
 void displayProgress(u8 perc)
 {	
-    u8g2.setFont(fontName);
-    u8g2.clearBuffer();
-    u8g2.firstPage();
-    do {
-        u8g2.drawUTF8(0,12,"OTA Update");
-        u8g2.setCursor(52,26);
-        u8g2.printf("%.2d%%",perc);
-        u8g2.setDrawColor(2);
-        u8g2.drawRBox(7,15,perc+14,14,3);
-    } while ( u8g2.nextPage() );    
+  u8g2.setPowerSave(0);
+  u8g2.setContrast(myConfig.get() -> displayContrast);
+  u8g2.setFont(fontName);
+  u8g2.clearBuffer();
+  u8g2.firstPage();
+  do {
+      u8g2.drawUTF8(0,12,"OTA Update");
+      u8g2.setCursor(52,26);
+      u8g2.printf("%.2d%%",perc);
+      u8g2.setDrawColor(2);
+      u8g2.drawRBox(7,15,perc+14,14,3);
+  } while ( u8g2.nextPage() );    
 }
 
 #ifdef ENABLE_MENU

@@ -1,6 +1,10 @@
 #include <EEPROM.h>
 #include <Arduino.h>
 #include "Config.h"
+#ifdef DEBUG_REMOTE
+  #include <RemoteDebug.h>
+  extern RemoteDebug Debug;
+#endif
 
 
 static Config::StoreStruct storage;
@@ -14,6 +18,13 @@ Config::Config() {
       EEPROM.read(2) == CONFIG_VERSION[2]){
     for (unsigned int t=0; t<sizeof(Config::StoreStruct); t++){
       *((char*)&storage + t) = EEPROM.read(t);
+      if(t ==  sizeof(CONFIG_VERSION)+ sizeof(size_t)-1 && storage.configSize != sizeof(Config::StoreStruct)){
+        #ifdef DEBUG_REMOTE
+          debugE("Illegal Config Size %d != %d!", storage.configSize, sizeof(Config::StoreStruct));
+        #endif
+        storage.configSize = sizeof(Config::StoreStruct);
+        break;
+      }
     }
   } else {
     Serial.printf("\nConfig Version UNMATCH '%s' != '%c%c%c'!\n",CONFIG_VERSION, EEPROM.read(0),EEPROM.read(1),EEPROM.read(2));

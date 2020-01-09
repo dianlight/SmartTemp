@@ -6,7 +6,6 @@
 
 #include <ESP8266mDNS.h>
 #include <Wire.h>
-#include <Ticker.h>
 #include <ArduinoOTA.h>
 #include <WiFiUdp.h>
 

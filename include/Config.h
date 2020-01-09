@@ -28,7 +28,7 @@
 
 
 // General Cofngi
-#define CONFIG_VERSION  "024"
+#define CONFIG_VERSION  "025"
 
 class Config {
     public:
@@ -83,7 +83,7 @@ class Config {
 
         struct __attribute__((packed, aligned(1))) StoreStruct {
             char version[4]                 = CONFIG_VERSION;
-//            bool resetConfig                = true;
+            size_t configSize               = sizeof(StoreStruct);
             float targetTemp[HOLDS::H_SIZE] = {18.5,19.5,20.5};
             float awayModify                = -0.5;
             float tempPrecision             = 0.2;
@@ -99,9 +99,14 @@ class Config {
             char mqtt_user[128]         = "mqttapi";
             char mqtt_password[40]      = "";
             char mqtt_topic_prefix[128] = "";    
+
+            byte displaySleep           = 15;
+            byte displayPowerOff        = 30;
+            byte displayContrast        = 200;
         };
 
         Config();
         void saveConfig();
         StoreStruct *get();
 };
+

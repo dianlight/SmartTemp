@@ -1,5 +1,15 @@
 #pragma once
 
+const static std::string DAYSNAME[] = {
+    "Sun",
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat"
+};
+
 void setupDisplay();
 void loopDisplay();
 void clearDisplay();
