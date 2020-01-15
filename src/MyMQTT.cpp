@@ -55,9 +55,9 @@ bool reconnect() {
     #ifdef DEBUG_EVENT
       Serial.print(String("Attempting MQTT connection..[") +  myConfig.get()->mqtt_user + ":"+ myConfig.get()->mqtt_password + "@" +myConfig.get()->mqtt_server +":" + myConfig.get()->mqtt_port +"] ..");
     #endif
-    // Create a random client ID
+    // Create the client ID
     String clientId = String(myConfig.get()->mqtt_client_id) + "-";
-    clientId += String(random(0xffff), HEX);
+    clientId += String(ESP.getChipId(), HEX);
     // Attempt to connect
     if (client.connect(clientId.c_str(),myConfig.get()->mqtt_user,myConfig.get()->mqtt_password)) {
       #ifdef DEBUG_EVENT
@@ -92,15 +92,16 @@ bool reconnect() {
       // Most of the time, you can rely on the implicit casts.
       // In other case, you can do root.set<long>("time", 1351824120);
       String topic = String("homeassistant/climate/")+ myConfig.get()->mqtt_client_id;
+      String rtopic = String("dianlight/smarttemp/")+ myConfig.get()->mqtt_client_id;
 
       root["name"] = myConfig.get()->mqtt_client_id,
-      root["mode_cmd_t"] = topic +"/thermostatModeCmd",
+      root["mode_cmd_t"] = rtopic +"/thermostatModeCmd",
       root["mode_stat_t"] = topic + "/state",
       root["mode_stat_tpl"] = "{{value_json.mode}}",
       root["avty_t"] = topic + "/available",
       root["pl_avail"] = "online",
       root["pl_not_avail"] = "offline",
-      root["temp_cmd_t"] = topic +"/targetTempCmd",
+      root["temp_cmd_t"] = rtopic +"/targetTempCmd",
       root["temp_stat_t"] = topic +"/state",
       root["temp_stat_tpl"] = "{{value_json.target_temp}}",
       root["curr_temp_t"] = topic +"/state",
@@ -109,10 +110,10 @@ bool reconnect() {
       root["action_template"] = "{{value_json.current_action}}",
       root["away_mode_stat_t"] = topic + "/state",
       root["away_mode_stat_tpl"] = "{{value_json.away}}",
-      root["away_mode_cmd_t"] = topic + "/awayModeCmd",
+      root["away_mode_cmd_t"] = rtopic + "/awayModeCmd",
       root["hold_stat_t"] = topic + "/state",
       root["hold_stat_tpl"] = "{{value_json.hold}}",
-      root["hold_cmd_t"] = topic + "/holdModeCmd",
+      root["hold_cmd_t"] = rtopic + "/holdModeCmd",
       root["min_temp"] = "10",
       root["max_temp"] = "35",
       root["temp_step"] = "0.1";
@@ -145,7 +146,7 @@ bool reconnect() {
       root.printTo(json);
 
       bool c = client.publish((myConfig.get()->mqtt_topic_prefix + topic + String("/config")).c_str(), 
-        json.c_str()
+        json.c_str(), true
       ); 
       if(!c){
         Serial.println("\nError sending MQTT message");
@@ -164,10 +165,10 @@ bool reconnect() {
       sendMQTTAvail(true);
       sendMQTTState();
 
-      client.subscribe((topic +"/targetTempCmd").c_str());
-      client.subscribe((topic +"/thermostatModeCmd").c_str());
-      client.subscribe((topic +"/awayModeCmd").c_str());
-      client.subscribe((topic +"/holdModeCmd").c_str());
+      client.subscribe((rtopic +"/targetTempCmd").c_str());
+      client.subscribe((rtopic +"/thermostatModeCmd").c_str());
+      client.subscribe((rtopic +"/awayModeCmd").c_str());
+      client.subscribe((rtopic +"/holdModeCmd").c_str());
       return true;
     } else {
       Serial.print("MQTT failed, rc=");
@@ -276,6 +277,7 @@ void sendMQTTState() {
   // Most of the time, you can rely on the implicit casts.
   // In other case, you can do root.set<long>("time", 1351824120);
   String topic = String("homeassistant/climate/")+ myConfig.get()->mqtt_client_id;
+  
   #ifdef DEBUG_MQTT
       Serial.println("Preparing Status Message:");
   #endif
@@ -287,7 +289,7 @@ void sendMQTTState() {
   if(!myConfig.get()->away){
     root["hold"] = CURRENT_HOLD_MQTT;
   }
-  root["current_temp"] = curTemp;
+  root["current_temp"] = round(curTemp*10)/10;
   root["current_action"] = CURRENT_ACTION_MQTT;
 
   #ifdef DEBUG_MQTT

@@ -195,7 +195,7 @@ void loop()
     }
     at8gw.i2cReader();
     curHumidity = at8gw.getHumidity();
-    curTemp = at8gw.getTemperature();
+    curTemp = at8gw.getTemperature() + FIXED_TEMP_CORRECTION;
     heating = at8gw.getRelay();
 
     if (WiFi.status() == WL_CONNECTED){
