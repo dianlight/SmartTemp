@@ -1,0 +1,179 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mini.css/3.0.1/mini-default.min.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>SmartTemp ver 0.0.0</title>
+        <!--
+            From http://microjs.com/#
+            
+            Populate.js -> https://github.com/dannyvankooten/populate.js
+            Civem.js -> https://github.com/javanto/civem.js
+
+            Qwery -> https://github.com/ded/qwery
+            Chibi -> https://github.com/kylebarrow/chibi
+            Page.js -> https://github.com/visionmedia/page.js
+
+
+        -->
+        <script src="populate.js"></script>
+        <script src="chibi-min.js"></script>
+    </head>
+    <body>
+        <h1>SmartTemp Configuration Page </h1>
+        <label for="drawer-control" class="drawer-toggle"></label>
+<!--
+        <input type="checkbox" id="drawer-control" class="drawer">
+        <div>
+          <label for="drawer-control" class="drawer-close"></label>
+          <ul>
+              <li><a href="#">Setup</a></li>
+              < !--
+              <li><a href="#">Week Program</a></li>
+              <li><a href="#">Calibration Setup</a></li>
+              <li><a href="#">Network Setup</a></li>
+              -- >
+          </ul>         
+        </div> 
+-->          
+        
+        <form id="configForm">
+            <fieldset name="Targets">
+              <legend>Targets</legend>
+              <div class="row">
+                <div class="col-sm-12 col-md-6">
+                    <label for="teco">Eco Temperature</label>
+                    <input type="text" id="teco" name="teco" placeholder="&deg;C"/>
+                </div>
+                <div class="col-sm-12 col-md-6">
+                    <label for="tnorm">Normal Temperature</label>
+                    <input type="text" id="tnorm" name="tnorm" placeholder="&deg;C"/>
+                </div>
+                <div class="col-sm-12 col-md-6">
+                    <label for="tconf">Confort Temperature</label>
+                    <input type="text" id="tconf" name="tconf" placeholder="&deg;C"/>
+                </div>
+              </div>
+            </fieldset>
+            <fieldset name="Away">
+                <legend>Away</legend>
+                <div class="row">
+                    <div class="col-sm-12 col-md-6">
+                        <label for="tadelta">Away delta</label>
+                        <input type="text" id="tadelta" name="tadelta" placeholder="&deg;C"/>
+                    </div>
+                </div>
+            </fieldset>
+            <fieldset name="Calibration">
+                <legend>Calibration</legend>
+                <div class="row">
+                    <div class="col-sm-12 col-md-6">
+                        <label for="tprec">Precision</label>
+                        <input type="text" id="tprec" name="tprec" placeholder="&deg;C"/>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <label for="sres">Switch Resolution</label>
+                        <input type="text" id="sres" name="sres" placeholder="sec"/>
+                    </div>
+                </div>
+            </fieldset>
+            <fieldset name="MQTT">
+                <legend>MQTT</legend>
+                <div class="row">
+                    <div class="col-sm-12 col-md-6">
+                        <label for="nname">Node name</label>
+                        <input type="text" id="nname" name="nname" placeholder=""/>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <label for="saddress">Server Address</label>
+                        <input type="text" id="saddress" name="saddress" placeholder=""/>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <label for="port">Port</label>
+                        <input type="text" id="port" name="port" placeholder=""/>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <label for="user">User</label>
+                        <input type="text" id="user" name="user" placeholder=""/>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" placeholder=""/>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <label for="tprefix">Topic prefix</label>
+                        <input type="text" id="tprefix" name="tprefix" placeholder=""/>
+                    </div>
+                </div>
+            </fieldset>
+            <!--
+            <fieldset name="WeekProgram">
+                <legend>WeekProgram</legend>
+                <div class="row">
+                    <div class="col-sm-12 col-md-6">
+                        <label for="mon">Monday</label>
+                        <input type="text" id="mon"  placeholder=""/>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <label for="tue">Tuesday</label>
+                        <input type="text" id="tue" placeholder=""/>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <label for="wed">Wednesday</label>
+                        <input type="text" id="wed" placeholder=""/>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <label for="thu">Thursday</label>
+                        <input type="text" id="thu" placeholder=""/>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <label for="fri">Friday</label>
+                        <input type="text" id="fri" placeholder=""/>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <label for="sat">Saturday</label>
+                        <input type="text" id="sat" placeholder=""/>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <label for="sun">Sunday</label>
+                        <input type="text" id="sun" placeholder=""/>
+                    </div>
+                </div>
+            </fieldset>
+        -->
+          </form>
+
+        <footer class="sticky">
+            <div class="row">
+                <div class="col-sm-12 col-md-10 col-sm-last">
+                    <p>Copyright 2020 Lucio Tarantino</p>
+                </div>
+                <div class="col-sm-12 col-md-2 col-md-last">
+                    <div class="button-group">
+                        <button class="primary" onclick="save()" >Save</button>
+                        <button class="secondary" onclick="reload()">Cancel</button>
+                    </div>
+                </div>
+            </div>        
+        </footer>
+
+        <script>
+            function reload(){
+                  $().ajax("load","GET",function(data,status){
+                      console.log(status,data);
+                      populate($("#configForm")[0],JSON.parse(data));
+                  });
+
+            }
+
+            function save(){
+                $("#configForm").ajax("save","POST",function(data,status){
+                    reload();
+                });
+            }
+
+            $().ready(function(){
+                reload();
+            });
+        </script>
+    </body>
+</html>
