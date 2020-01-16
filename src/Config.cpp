@@ -8,6 +8,9 @@
 
 
 static Config::StoreStruct storage;
+#ifndef ENABLE_MENU
+  static Config::ConfigModeStruct configMode;
+#endif
 
 Config::Config() {
   EEPROM.begin(sizeof(Config::StoreStruct));  
@@ -40,5 +43,11 @@ void Config::saveConfig() {
 Config::StoreStruct *Config::get() {
     return &storage;
 }
+
+#ifndef ENABLE_MENU
+  Config::ConfigModeStruct *Config::getMode() {
+    return &configMode;
+  }
+#endif
 
 

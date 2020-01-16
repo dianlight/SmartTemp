@@ -220,13 +220,13 @@ static time_t lastAction;
 static bool psMode = false;
 
 void sleepModeDislay(){
-  if(millis() - lastAction > myConfig.get() -> displayPowerOff * 1000 ){
+  if(millis() - lastAction > myConfig.get() -> displayPowerOff * 1000 && !myConfig.getMode()->active){
     u8g2.setPowerSave(1);
     #ifdef DEBUG_REMOTE
       debugV("PowerOff Display");
     #endif
     psMode=true;
-  } else if(millis() - lastAction > myConfig.get() -> displaySleep * 1000 ){
+  } else if(millis() - lastAction > myConfig.get() -> displaySleep * 1000 && !myConfig.getMode()->active){
     uint8_t ctn = map((millis() - lastAction)/1000,myConfig.get() -> displaySleep,myConfig.get() -> displayPowerOff,myConfig.get() -> displayContrast/2,0);
     u8g2.setContrast(ctn);
     #ifdef DEBUG_REMOTE
@@ -274,19 +274,25 @@ void loopDisplay() {
     if( nav.sleepTask ){
   #endif // ENABLE_MENU  
 
-    if( at8gw.getEncoder() > lastEncPosition && !psMode){
+    if( at8gw.getEncoder() > lastEncPosition && !psMode && !myConfig.getMode()->active){
       myConfig.get()->mode= Config::MODES::MANUAL;
       myConfig.get()->hold= (myConfig.get()->hold+1) %  Config::HOLDS::H_SIZE;
       lastEncPosition = at8gw.getEncoder();
       lastAction=millis();
       myConfig.saveConfig();
-    } else if ( at8gw.getEncoder() < lastEncPosition && !psMode){
+    } else if ( at8gw.getEncoder() < lastEncPosition && !psMode && !myConfig.getMode()->active){
       myConfig.get()->mode= Config::MODES::MANUAL;
       myConfig.get()->hold= abs(myConfig.get()->hold-1) %  Config::HOLDS::H_SIZE;
       lastEncPosition = at8gw.getEncoder();
       lastAction=millis();
       myConfig.saveConfig();
-    } else if ( at8gw.getEncoder() != lastEncPosition ){
+  #ifndef ENABLE_MENU
+    } else if ( at8gw.getEncoder() != lastEncPosition && !psMode && myConfig.getMode()->active ){
+        myConfig.getMode()->encoder += (at8gw.getEncoder() - lastEncPosition) ;
+        lastEncPosition = at8gw.getEncoder();
+        lastAction=millis();
+  #endif
+    } else if ( at8gw.getEncoder() != lastEncPosition  || at8gw.getEncoderButton() > 0 ){
       psMode = false;
       u8g2.setPowerSave(0);
       u8g2.setContrast(myConfig.get() -> displayContrast);
@@ -295,22 +301,41 @@ void loopDisplay() {
     }
 
   #ifdef ENABLE_MENU
-    if( at8gw.getEncoderButton() == 3 && myConfig.get()->mode != Config::MODES::AUTO && ( millis() - lastBtnTime ) > 3000){ // Hold
+    if( at8gw.getEncoderButton() == AT8I2CGATEWAY::HELD && myConfig.get()->mode != Config::MODES::AUTO && ( millis() - lastBtnTime ) > 3000){ // Hold
   #else  
-    if( at8gw.getEncoderButton() == 5 && myConfig.get()->mode != Config::MODES::AUTO ){ // Click
+    if( at8gw.getEncoderButton() == AT8I2CGATEWAY::CLICKED && myConfig.get()->mode != Config::MODES::AUTO && !myConfig.getMode()->active){ // Click
   #endif  
       myConfig.get()->mode = Config::MODES::AUTO;
       lastBtnTime = millis();
       lastAction=millis();
       myConfig.saveConfig();
-    } else if( at8gw.getEncoderButton() == 3 && myConfig.get()->mode == Config::MODES::AUTO && ( millis() - lastBtnTime ) > 3000){ // Hold
+  #ifndef ENABLE_MENU
+    } else if( at8gw.getEncoderButton() == AT8I2CGATEWAY::CLICKED && myConfig.getMode()->active){ // Click
+      myConfig.getMode()->position = (myConfig.getMode()->position + 1) % Config::CONFIG_TARGET::_CONFIG_MODE_SIZE;
+      myConfig.getMode()->encoder = 0;
+      lastBtnTime = millis();
+      lastAction=millis();
+    } else if( at8gw.getEncoderButton() == AT8I2CGATEWAY::HELD && ( millis() - lastBtnTime ) > 3000 && myConfig.getMode()->active){ // Hold
+      myConfig.getMode()->position = abs(myConfig.getMode()->position - 1) % Config::CONFIG_TARGET::_CONFIG_MODE_SIZE;
+      myConfig.getMode()->encoder = 0;
+      lastBtnTime = millis();
+      lastAction=millis();
+  #endif    
+    } else if( at8gw.getEncoderButton() == AT8I2CGATEWAY::HELD && myConfig.get()->mode == Config::MODES::AUTO && ( millis() - lastBtnTime ) > 3000){ // Hold
       myConfig.get()->away = !myConfig.get()->away;
       lastBtnTime = millis();
       lastAction=millis();
       myConfig.saveConfig();
+  #ifndef ENABLE_MENU
+    } else if( at8gw.getEncoderButton() == AT8I2CGATEWAY::DOUBLECLICKED ){ // Double click
+      myConfig.getMode()->active = !myConfig.getMode()->active;
+      myConfig.saveConfig();
+      if(myConfig.get()->configSize == 0)ESP.restart();
+  #endif  
     }
 
     bool blink = ( millis() - lastTime ) > 800;
+    bool fblink = ( millis() - lastTime ) > 900;
     if(( millis() - lastTime ) > 1600)lastTime = millis();
 
     u8g2.firstPage();
@@ -362,27 +387,98 @@ void loopDisplay() {
         // Footer ( Time and Date )
         u8g2.setFont(fontName);
         u8g2.setCursor(0,63);
-        u8g2.printf("%s",CURRENT_MODE_STR);
-        u8g2.setCursor(5*fontX,63);
-        u8g2.printf("%s",CURRENT_HOLD_STR);
-        u8g2.setCursor(128-45,63);
-//        u8g2.printf("%s",myTZ.dateTime(String("D H")+(blink?":":" ")+"i").c_str()); //G
-        u8g2.printf("%s %.2d:%.2d",DAYSNAME[getNTPTime()->tm_wday].c_str(),getNTPTime()->tm_hour, getNTPTime()->tm_min);
+        if(!myConfig.getMode()->active){
+          u8g2.printf("%s",CURRENT_MODE_STR);
+          u8g2.setCursor(5*fontX,63);
+          u8g2.printf("%s",CURRENT_HOLD_STR);
+          u8g2.setCursor(128-45,63);
+          u8g2.printf("%s %.2d:%.2d",DAYSNAME[getNTPTime()->tm_wday].c_str(),getNTPTime()->tm_hour, getNTPTime()->tm_min);
+        } else {
+          u8g2.printf("%s","Config");
+          u8g2.setCursor(5*fontX,63);
+          u8g2.printf("%s",CONFIG_TARGET_STR);
+//          u8g2.setCursor(128-45,63);
+//          u8g2.printf("%s %.2d:%.2d",DAYSNAME[getNTPTime()->tm_wday].c_str(),getNTPTime()->tm_hour, getNTPTime()->tm_min);
+        }
 
 
         // Main display
         u8g2.drawHLine(0,14,128);
         u8g2.drawHLine(0,14+28,128);
-        u8g2.setFont(u8g2_font_profont29_tn);
-        u8g2.setCursor(26,40);
-        u8g2.printf("%2.1f",curTemp);
-        u8g2.setFont(u8g2_font_5x7_mf);
-        u8g2.drawGlyph(90,44-22,'o');
-        u8g2.setFont(fontName);
-        u8g2.drawGlyph(90+5,44-17,'C');
+        if(!myConfig.getMode()->active){
+          u8g2.setFont(u8g2_font_profont29_tr);
+          u8g2.setCursor(26,40);
+          u8g2.printf("%2.1f",curTemp);
+          u8g2.setFont(u8g2_font_5x7_mf);
+          u8g2.drawGlyph(90,44-22,'o');
+          u8g2.setFont(fontName);
+          u8g2.drawGlyph(90+5,44-17,'C');
+        } else {
+          switch (myConfig.getMode()->position)
+          {
+          case Config::CONFIG_TARGET::ECO_TEMP:
+            u8g2.setFont(u8g2_font_profont29_tr);
+            u8g2.setCursor(26,40);
+            myConfig.get()->targetTemp[0] += ( myConfig.getMode()->encoder / 5.0);
+            myConfig.getMode()->encoder = 0;
+            if(fblink) u8g2.printf("%2.1f",myConfig.get()->targetTemp[0]);
+            u8g2.setFont(u8g2_font_5x7_mf);
+            u8g2.drawGlyph(90,44-22,'o');
+            u8g2.setFont(fontName);
+            u8g2.drawGlyph(90+5,44-17,'C');
+            break;
+          case Config::CONFIG_TARGET::NORMAL_TEMP:
+            u8g2.setFont(u8g2_font_profont29_tr);
+            u8g2.setCursor(26,40);
+            myConfig.get()->targetTemp[1] += ( myConfig.getMode()->encoder / 5.0);
+            myConfig.getMode()->encoder = 0;
+            if(fblink) u8g2.printf("%2.1f",myConfig.get()->targetTemp[1]);
+            u8g2.setFont(u8g2_font_5x7_mf);
+            u8g2.drawGlyph(90,44-22,'o');
+            u8g2.setFont(fontName);
+            u8g2.drawGlyph(90+5,44-17,'C');
+            break;
+          case Config::CONFIG_TARGET::CONFORT_TEMP:
+            u8g2.setFont(u8g2_font_profont29_tr);
+            u8g2.setCursor(26,40);
+            myConfig.get()->targetTemp[2] += (myConfig.getMode()->encoder / 5.0);
+            myConfig.getMode()->encoder = 0;
+            if(fblink) u8g2.printf("%2.1f",myConfig.get()->targetTemp[2]);
+            u8g2.setFont(u8g2_font_5x7_mf);
+            u8g2.drawGlyph(90,44-22,'o');
+            u8g2.setFont(fontName);
+            u8g2.drawGlyph(90+5,44-17,'C');
+            break;
+          case Config::CONFIG_TARGET::AWAY_DIFF:
+            u8g2.setFont(u8g2_font_profont29_tr);
+            u8g2.setCursor(26,40);
+            myConfig.get()->awayModify += (myConfig.getMode()->encoder / 10.0);
+            myConfig.getMode()->encoder = 0;
+            if(fblink) u8g2.printf("%2.1f",myConfig.get()->awayModify);
+            u8g2.setFont(u8g2_font_5x7_mf);
+            u8g2.drawGlyph(90,44-22,'o');
+            u8g2.setFont(fontName);
+            u8g2.drawGlyph(90+5,44-17,'C');
+            break;
+          case Config::CONFIG_TARGET::WIFI:
+            u8g2.setFont(fontName);
+            u8g2.drawUTF8(0,26,String(String("AP:")+WiFi.SSID()).c_str());
+            u8g2.drawUTF8(0,36,String(String("IP:")+WiFi.localIP().toString()).c_str());
+            break;
+          case Config::CONFIG_TARGET::FACTORY_RESET:
+            u8g2.setFont(u8g2_font_profont29_tr);
+            u8g2.setCursor(0,40);
+            myConfig.get()->version[0] = (myConfig.getMode()->encoder % 2 == 0)?CONFIG_VERSION[0]:'R';
+            myConfig.getMode()->doFactoryReset = !(myConfig.getMode()->encoder % 2 == 0);
+            if(fblink) u8g2.printf("%s",myConfig.getMode()->doFactoryReset?"No Reset":"Reset");
+            break;
+          default:
+            break;
+          }
+        }
 
         // Program
-        if(myConfig.get()->mode == Config::AUTO){
+        if(myConfig.get()->mode == Config::AUTO && !myConfig.getMode()->active){
           u8g2.drawHLine(0,63-fontY-1,128);
           for(u8 i=1,h=0; i < 128; i+=4,h++){
 //            if(h == myTZ.hour()){

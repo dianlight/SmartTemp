@@ -27,11 +27,12 @@
 #define FIXED_TEMP_CORRECTION -2.0
 
 
-// RUNNING STRUCTURE
-
-
 // General Cofngi
 #define CONFIG_VERSION  "025"
+
+// 
+#define CONFIG_TARGET_STR    myConfig.CONFIG_TARGET_NAME[myConfig.getMode()->position]
+
 
 class Config {
     public:
@@ -54,6 +55,37 @@ class Config {
         const char* MODES_MQTT_NAME[3] = {"off","heat","auto"};
         const char* HOLDS_NAME[3] = {"Eco","Normal","Confort"};
         const char* HOLDS_MQTT_NAME[3] = {"Eco","Normal","Confort"};
+
+    #ifndef ENABLE_MENU
+    
+        enum CONFIG_TARGET {
+            ECO_TEMP = 0,
+            NORMAL_TEMP,
+            CONFORT_TEMP,
+            AWAY_DIFF,
+            //  TIME_INTERNET,
+            //  TIME_WEEKDAY,
+            //  TIME_HOUR,
+            //  TIME_MINUTE,
+            WIFI,
+            FACTORY_RESET,
+
+            _CONFIG_MODE_SIZE
+        };
+
+
+        struct ConfigModeStruct {
+            bool active = false;
+            uint8_t position = ECO_TEMP;
+            int8_t  encoder = 0;
+            bool    doFactoryReset = false;
+        };
+
+
+        const char* CONFIG_TARGET_NAME[6] = {"Eco","Normal","Confort","Away Delta","WiFi","Factory Reset"};
+
+    #endif 
+
 
         struct __attribute__((packed, aligned(1))) DayProgram {
             byte hourQuarterHolds[24*4] = {
@@ -111,5 +143,8 @@ class Config {
         Config();
         void saveConfig();
         StoreStruct *get();
+        #ifndef ENABLE_MENU
+            ConfigModeStruct *getMode();
+        #endif
 };
 

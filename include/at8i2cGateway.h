@@ -13,6 +13,15 @@ class AT8I2CGATEWAY {
         bool    getRelay();
         void    setRelay(bool on);
         void    i2cReader();
+        enum CLICK_CODE {
+                 OPEN = 0,
+                 CLOSED = 1,
+                 PRESSED = 2,
+                 HELD = 3,
+                 RELEASED = 4,
+                 CLICKED = 5,
+                 DOUBLECLICKED = 6, 
+        };        
     private:
         enum __attribute__((__packed__)) COMMAND {
             RELAY = 'R',

@@ -51,7 +51,7 @@
     <br />
     <br />
     -->
-    <a href="https://github.com/dianlight/SmartTemp/CHANGELOG.md">Changelog</a>
+    <a href="https://github.com/dianlight/SmartTemp/blob/master/CHANGELOG.md">Changelog</a>
     ·
     <a href="https://github.com/dianlight/SmartTemp/issues">SmartTemp Bug</a>
     ·
@@ -227,7 +227,7 @@ Project Link: [https://github.com/dianlight/SmartTemp](https://github.com/dianli
 [issues-shield]: https://img.shields.io/github/issues/dianlight/SmartTemp.svg?style=flat-square
 [issues-url]: https://github.com/dianlight/SmartTemp/issues
 [license-shield]: https://img.shields.io/github/license/dianlight/SmartTemp.svg?style=flat-square
-[license-url]: https://github.com/dianlight/SmartTemp/blob/master/LICENSE.txt
+[license-url]: https://github.com/dianlight/SmartTemp/blob/master/LICENSE
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=flat-square&logo=linkedin&colorB=555
 [linkedin-url]: https://www.linkedin.com/in/lucio-tarantino-8ab9a3/
 [product-screenshot]: images/screenshot.png
