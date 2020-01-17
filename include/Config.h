@@ -1,5 +1,11 @@
 #pragma once
 
+//#define STR(x) x
+ 
+#ifndef SMT_VERSION
+    #define SMT_VERSION NdN
+#endif
+
 #define DEBUG_REMOTE
 //#define DEBUG_I2C_SCAN
 //#define DEBUG_I2C_IN
@@ -27,8 +33,8 @@
 #define FIXED_TEMP_CORRECTION -2.0
 
 
-// General Cofngi
-#define CONFIG_VERSION  "025"
+// General Config
+#define CONFIG_VERSION  "026"
 
 // 
 #define CONFIG_TARGET_STR    myConfig.CONFIG_TARGET_NAME[myConfig.getMode()->position]
@@ -51,10 +57,19 @@ class Config {
 
             H_SIZE    
         };
+        enum __attribute__((__packed__)) AWAY_MODES {
+            FIXED_ECO,     
+            FIXED_NORMAL,  
+            FIXED_CONFORT,
+            AS_AUTO,
+
+            AM_SIZE    
+        };
         const char* MODES_NAME[3] = {"Off","Manual","Auto"};
         const char* MODES_MQTT_NAME[3] = {"off","heat","auto"};
         const char* HOLDS_NAME[3] = {"Eco","Normal","Confort"};
         const char* HOLDS_MQTT_NAME[3] = {"Eco","Normal","Confort"};
+        const char* AWAY_MODES_NAME[4] = {"As Auto","Fix to Eco","Fix to Normal","Fix to Confort"};
 
     #ifndef ENABLE_MENU
     
@@ -63,11 +78,13 @@ class Config {
             NORMAL_TEMP,
             CONFORT_TEMP,
             AWAY_DIFF,
+            AWAY_HOLDS,
             //  TIME_INTERNET,
             //  TIME_WEEKDAY,
             //  TIME_HOUR,
             //  TIME_MINUTE,
             WIFI,
+            INFO,
             FACTORY_RESET,
 
             _CONFIG_MODE_SIZE
@@ -82,7 +99,7 @@ class Config {
         };
 
 
-        const char* CONFIG_TARGET_NAME[6] = {"Eco","Normal","Confort","Away Delta","WiFi","Factory Reset"};
+        const char* CONFIG_TARGET_NAME[8] = {"Eco","Normal","Confort","Away Delta","Away Holds","Info","WiFi","Factory Reset"};
 
     #endif 
 
@@ -121,6 +138,7 @@ class Config {
             size_t configSize               = sizeof(StoreStruct);
             float targetTemp[HOLDS::H_SIZE] = {18.5,19.5,20.5};
             float awayModify                = -0.5;
+            byte  awayMode                  = AWAY_MODES::AS_AUTO;
             float tempPrecision             = 0.2;
             uint8_t minSwitchTime           = 30;
             byte mode                       = MODES::AUTO;

@@ -47,6 +47,7 @@ void handleLoadData(){
     root["tnorm"] = myConfig.get()->targetTemp[1];
     root["tconf"] = myConfig.get()->targetTemp[2];
     root["tadelta"] = myConfig.get()->awayModify;
+    root["tamode"] = myConfig.get()->awayMode;
     root["tprec"] = myConfig.get()->tempPrecision;
     root["sres"] = myConfig.get()->minSwitchTime;
     root["nname"] = myConfig.get()->mqtt_client_id;
@@ -59,22 +60,6 @@ void handleLoadData(){
     root.printTo(json);
 
     server.send(200,"application/json",json.c_str());
-/*
-      server.send(200,"application/json","{ "\
-                "'teco': '18.0',"\
-                "'tnorm': '18.5',"\
-                "'tconf': '19.0',"\
-                "'tadelta': '-0.5',"\
-                "'tprec': '0.2',"\
-                "'sres': '30',"\
-                "'nname': 'SmartTemp',"\
-                "'saddress':'hassio4.local',"\
-                "'port':'1883',"\
-                "'user':'mqttapi',"\
-                "'password':'2410673F90',"\
-                "'tprefix':'',"\
-                "}");
-*/                
 }
 
 void handleSaveData(){
@@ -92,6 +77,7 @@ void handleSaveData(){
         myConfig.get()->targetTemp[1] = server.arg("tnorm").toFloat();
         myConfig.get()->targetTemp[2] = server.arg("tconf").toFloat();
         myConfig.get()->awayModify = server.arg("tadelta").toFloat();
+        myConfig.get()->awayMode = server.arg("tamode").toFloat();
         myConfig.get()->tempPrecision = server.arg("tprec").toFloat();
         myConfig.get()->minSwitchTime = server.arg("sres").toFloat();
         strcpy(myConfig.get()->mqtt_client_id,server.arg("nname").c_str());
@@ -118,7 +104,7 @@ bool handleFileRead(String path){  // send the right file to the client (if it e
     File file = SPIFFS.open(path, "r");                    // Open the file
     size_t sent = server.streamFile(file, contentType);    // Send it to the client
     file.close();                                          // Close the file again
-    Serial.println(String("\tSent file: ") + path);
+    Serial.printf("\tSent file: %s (%d)",path.c_str(),sent);
     return true;
   }
   Serial.println(String("\tFile Not Found: ") + path);

@@ -2,7 +2,7 @@
     <head>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mini.css/3.0.1/mini-default.min.css">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>SmartTemp ver 0.0.0</title>
+        <title>SmartTemp ver 0.0.1</title>
         <!--
             From http://microjs.com/#
             
@@ -42,15 +42,15 @@
               <div class="row">
                 <div class="col-sm-12 col-md-6">
                     <label for="teco">Eco Temperature</label>
-                    <input type="text" id="teco" name="teco" placeholder="&deg;C"/>
+                    <input type="text" id="teco" name="teco" placeholder=""/>&#x2103;
                 </div>
                 <div class="col-sm-12 col-md-6">
                     <label for="tnorm">Normal Temperature</label>
-                    <input type="text" id="tnorm" name="tnorm" placeholder="&deg;C"/>
+                    <input type="text" id="tnorm" name="tnorm" placeholder=""/>&#x2103;
                 </div>
                 <div class="col-sm-12 col-md-6">
                     <label for="tconf">Confort Temperature</label>
-                    <input type="text" id="tconf" name="tconf" placeholder="&deg;C"/>
+                    <input type="text" id="tconf" name="tconf" placeholder=""/>&#x2103;
                 </div>
               </div>
             </fieldset>
@@ -58,8 +58,19 @@
                 <legend>Away</legend>
                 <div class="row">
                     <div class="col-sm-12 col-md-6">
-                        <label for="tadelta">Away delta</label>
-                        <input type="text" id="tadelta" name="tadelta" placeholder="&deg;C"/>
+                        <label for="tadelta">Away &#x394;</label>
+                        <input type="text" id="tadelta" name="tadelta" placeholder=""/>&#x2103;
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12 col-md-6">
+                        <label for="tamode">Away Mode</label>
+                        <select id="tamode" name="tamode">
+                            <option value="3">As Auto</option>
+                            <option value="0">Fix to Eco</option>
+                            <option value="1">Fix to Normal</option>
+                            <option value="2">Fix to Confort</option>
+                        </select>
                     </div>
                 </div>
             </fieldset>
@@ -68,11 +79,11 @@
                 <div class="row">
                     <div class="col-sm-12 col-md-6">
                         <label for="tprec">Precision</label>
-                        <input type="text" id="tprec" name="tprec" placeholder="&deg;C"/>
+                        <input type="text" id="tprec" name="tprec" placeholder=""/>&#x2103;
                     </div>
                     <div class="col-sm-12 col-md-6">
                         <label for="sres">Switch Resolution</label>
-                        <input type="text" id="sres" name="sres" placeholder="sec"/>
+                        <input type="text" id="sres" name="sres" placeholder=""/>sec
                     </div>
                 </div>
             </fieldset>

@@ -392,7 +392,7 @@ void loopDisplay() {
           u8g2.setCursor(5*fontX,63);
           u8g2.printf("%s",CURRENT_HOLD_STR);
           u8g2.setCursor(128-45,63);
-          u8g2.printf("%s %.2d:%.2d",DAYSNAME[getNTPTime()->tm_wday].c_str(),getNTPTime()->tm_hour, getNTPTime()->tm_min);
+          u8g2.printf("%s  %.2d:%.2d",DAYSNAME[getNTPTime()->tm_wday].c_str(),getNTPTime()->tm_hour, getNTPTime()->tm_min);
         } else {
           u8g2.printf("%s","Config");
           u8g2.setCursor(5*fontX,63);
@@ -460,6 +460,17 @@ void loopDisplay() {
             u8g2.setFont(fontName);
             u8g2.drawGlyph(90+5,44-17,'C');
             break;
+          case Config::CONFIG_TARGET::AWAY_HOLDS:
+            u8g2.setFont(u8g2_font_profont29_tr);
+            u8g2.setCursor(0,40);
+            myConfig.get()->awayMode = abs((myConfig.get()->awayMode + myConfig.getMode()->encoder) % Config::AWAY_MODES::AM_SIZE);
+            if(fblink) u8g2.printf("%s",myConfig.AWAY_MODES_NAME[myConfig.get()->awayMode]);
+            break;
+          case Config::CONFIG_TARGET::INFO:
+            u8g2.setFont(fontName);
+            u8g2.drawUTF8(0,26,"Version:" SMT_VERSION "." CONFIG_VERSION);
+//            u8g2.drawUTF8(0,36,String(String("IP:")+WiFi.localIP().toString()).c_str());
+            break;
           case Config::CONFIG_TARGET::WIFI:
             u8g2.setFont(fontName);
             u8g2.drawUTF8(0,26,String(String("AP:")+WiFi.SSID()).c_str());
@@ -478,7 +489,11 @@ void loopDisplay() {
         }
 
         // Program
-        if(myConfig.get()->mode == Config::AUTO && !myConfig.getMode()->active){
+        if( (
+               ( !myConfig.get()->awayMode &&  myConfig.get()->mode == Config::AUTO )
+            || ( myConfig.get()->awayMode &&  myConfig.get()->awayMode == Config::AWAY_MODES::AS_AUTO )
+            )
+           && !myConfig.getMode()->active){
           u8g2.drawHLine(0,63-fontY-1,128);
           for(u8 i=1,h=0; i < 128; i+=4,h++){
 //            if(h == myTZ.hour()){
