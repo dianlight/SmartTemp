@@ -40,6 +40,8 @@
 #define CONFIG_TARGET_STR    myConfig.CONFIG_TARGET_NAME[myConfig.getMode()->position]
 
 
+#include "Constants.h"
+
 class Config {
     public:
 

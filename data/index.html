@@ -2,7 +2,7 @@
     <head>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mini.css/3.0.1/mini-default.min.css">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>SmartTemp ver 0.0.1</title>
+        <title>SmartTemp | {{CURRENT_MODE}}</title>
         <!--
             From http://microjs.com/#
             
@@ -19,7 +19,15 @@
         <script src="chibi-min.js"></script>
     </head>
     <body>
-        <h1>SmartTemp Configuration Page </h1>
+        <header class="sticky">
+            <a href="#" class="logo">SmartTemp</a>
+            <!--
+            <a href="#" class="button" disabled="true">Home</a>
+            <a href="#" class="button" disabled="true">Program</a>
+            -->
+            <a href="#" class="button">Config</a>
+        </header>
+        
         <label for="drawer-control" class="drawer-toggle"></label>
 <!--
         <input type="checkbox" id="drawer-control" class="drawer">
@@ -156,7 +164,7 @@
         <footer class="sticky">
             <div class="row">
                 <div class="col-sm-12 col-md-10 col-sm-last">
-                    <p>Copyright 2020 Lucio Tarantino</p>
+                    <p>Version: {{VERSION}} &#xA9; {{COPYRIGHT}}</p>
                 </div>
                 <div class="col-sm-12 col-md-2 col-md-last">
                     <div class="button-group">

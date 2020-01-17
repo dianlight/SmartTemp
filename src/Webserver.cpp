@@ -5,9 +5,11 @@
 #include <ArduinoJson.h>
 #include <strings.h>
 #include "Display.h"
+#include <EspHtmlTemplateProcessor.h>
 
 #include "Config.h"
 extern Config myConfig;
+#include "Thermostat.h"
 
 #ifdef DEBUG_REMOTE
   #include <RemoteDebug.h>
@@ -22,6 +24,7 @@ extern Config myConfig;
  */
 
 ESP8266WebServer server(8080);
+EspHtmlTemplateProcessor templateProcessor(&server);
 
 String getContentType(String filename){
   if(filename.endsWith(".htm")) return "text/html";
@@ -93,6 +96,15 @@ void handleSaveData(){
 
 }
 
+String indexKeyProcessor(const String& key)
+{
+  if (key == "VERSION") return SMT_VERSION "." CONFIG_VERSION;
+  else if (key == "CURRENT_MODE") return CURRENT_MODE_STR;
+  else if (key == "COPYRIGHT") return COPYRIGHT;
+
+  return "&#x1F534;" + key + "&#x1F534;";
+}
+
 bool handleFileRead(String path){  // send the right file to the client (if it exists)
   Serial.println("handleFileRead: " + path);
   if(path.endsWith("/")) path += "index.html";           // If a folder is requested, send the index file
@@ -101,10 +113,14 @@ bool handleFileRead(String path){  // send the right file to the client (if it e
   if(SPIFFS.exists(pathWithGz) || SPIFFS.exists(path)){  // If the file exists, either as a compressed archive, or normal
     if(SPIFFS.exists(pathWithGz))                          // If there's a compressed version available
       path += ".gz";                                         // Use the compressed version
-    File file = SPIFFS.open(path, "r");                    // Open the file
-    size_t sent = server.streamFile(file, contentType);    // Send it to the client
-    file.close();                                          // Close the file again
-    Serial.printf("\tSent file: %s (%d)",path.c_str(),sent);
+    if(contentType.equals("text/html") && !SPIFFS.exists(pathWithGz)){  // Do not support tempalte gzip -- for now --
+      templateProcessor.processAndSend(path,indexKeyProcessor);
+    } else {
+      File file = SPIFFS.open(path, "r");                    // Open the file
+      size_t sent = server.streamFile(file, contentType);    // Send it to the client
+      file.close();                                          // Close the file again
+      Serial.printf("\tSent file: %s (%d)",path.c_str(),sent);
+    }
     return true;
   }
   Serial.println(String("\tFile Not Found: ") + path);
