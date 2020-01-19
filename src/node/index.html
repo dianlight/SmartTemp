@@ -1,31 +1,15 @@
 <html>
     <head>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mini.css/3.0.1/mini-default.min.css">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>SmartTemp | {{CURRENT_MODE}}</title>
-        <!--
-            From http://microjs.com/#
-            
-            Populate.js -> https://github.com/dannyvankooten/populate.js
-            Civem.js -> https://github.com/javanto/civem.js
-
-            Qwery -> https://github.com/ded/qwery
-            Chibi -> https://github.com/kylebarrow/chibi
-            Page.js -> https://github.com/visionmedia/page.js
-
-
-        -->
-        <script src="populate.js"></script>
-        <script src="chibi-min.js"></script>
+        <script src="main.js"></script>
     </head>
     <body>
         <header class="sticky">
             <a href="#" class="logo">SmartTemp</a>
-            <!--
-            <a href="#" class="button" disabled="true">Home</a>
-            <a href="#" class="button" disabled="true">Program</a>
-            -->
-            <a href="#" class="button">Config</a>
+            <a href="#" class="button" onclick="show('home')" >Home</a>
+            <a href="#" class="button" onclick="show('program')">Program</a>
+            <a href="#" class="button" onclick="show('config')">Config</a>
         </header>
         
         <label for="drawer-control" class="drawer-toggle"></label>
@@ -43,7 +27,11 @@
           </ul>         
         </div> 
 -->          
-        
+    <div id="home" class="panel">
+    </div> 
+    <div id="program" class="panel">
+    </div> 
+    <div id="config" class="panel">    
         <form id="configForm">
             <fieldset name="Targets">
               <legend>Targets</legend>
@@ -61,6 +49,27 @@
                     <input type="text" id="tconf" name="tconf" placeholder=""/>&#x2103;
                 </div>
               </div>
+            </fieldset>
+            <fieldset name="Automation">
+                <legend>Automation</legend>
+                <div class="row">
+                    <div class="col-sm-12 col-md-6">
+                        <label for="aautotimeout">Manual to Auto return time</label>
+                        <input type="text" id="aautotimeout" name="aautotimeout" placeholder=""/> sec (0 = newer return)
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12 col-md-6">
+                        <label for="dsleep">Display Low Energy</label>
+                        <input type="text" id="dsleep" name="dsleep" placeholder=""/> sec
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12 col-md-6">
+                        <label for="doff">Display Off</label>
+                        <input type="text" id="doff" name="doff" placeholder=""/> sec
+                    </div>
+                </div>
             </fieldset>
             <fieldset name="Away">
                 <legend>Away</legend>
@@ -160,6 +169,7 @@
             </fieldset>
         -->
           </form>
+        </div>  
 
         <footer class="sticky">
             <div class="row">
@@ -174,7 +184,7 @@
                 </div>
             </div>        
         </footer>
-
+<!--
         <script>
             function reload(){
                   $().ajax("load","GET",function(data,status){
@@ -194,5 +204,6 @@
                 reload();
             });
         </script>
+    -->        
     </body>
 </html>

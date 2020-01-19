@@ -162,7 +162,7 @@ void setup()
 
 }   
 
-unsigned long checkLastTime, switchLastTime;
+unsigned long checkLastTime, switchLastTime, manualTime;
 
 
 void loop()
@@ -172,6 +172,15 @@ void loop()
   if(!loopOTA()){
 
     if(millis() - checkLastTime > 5000){
+        // Automation
+        if(myConfig.get()->returnAutoTimeout > 0 
+              && !myConfig.get()->away 
+              && myConfig.get()->hold == Config::MODES::MANUAL 
+              && millis() - manualTime > myConfig.get()->returnAutoTimeout * 1000){
+          myConfig.get()->hold = Config::MODES::AUTO;
+        }
+
+        // Relay Control      
         if(curTemp - myConfig.get()->tempPrecision < TARGET_TEMP && millis() - switchLastTime > myConfig.get()->minSwitchTime * 1000){
           #ifdef DEBUG_EVENT
             Serial.printf("Relay On %f < %f",curTemp - myConfig.get()->tempPrecision,TARGET_TEMP);

@@ -267,6 +267,7 @@ void setupDisplay() {
 
 
 unsigned long lastTime = 0, lastBtnTime = 0;
+extern unsigned long manualTime;
 
 void loopDisplay() {
   #ifdef ENABLE_MENU
@@ -276,12 +277,14 @@ void loopDisplay() {
 
     if( at8gw.getEncoder() > lastEncPosition && !psMode && !myConfig.getMode()->active){
       myConfig.get()->mode= Config::MODES::MANUAL;
+      manualTime = millis();
       myConfig.get()->hold= (myConfig.get()->hold+1) %  Config::HOLDS::H_SIZE;
       lastEncPosition = at8gw.getEncoder();
       lastAction=millis();
       myConfig.saveConfig();
     } else if ( at8gw.getEncoder() < lastEncPosition && !psMode && !myConfig.getMode()->active){
       myConfig.get()->mode= Config::MODES::MANUAL;
+      manualTime = millis();
       myConfig.get()->hold= abs(myConfig.get()->hold-1) %  Config::HOLDS::H_SIZE;
       lastEncPosition = at8gw.getEncoder();
       lastAction=millis();
@@ -460,10 +463,21 @@ void loopDisplay() {
             u8g2.setFont(fontName);
             u8g2.drawGlyph(90+5,44-17,'C');
             break;
+          case Config::CONFIG_TARGET::MANUAL_TO_AUTO_TIME:
+            u8g2.setFont(u8g2_font_profont29_tr);
+            u8g2.setCursor(26,40);
+            myConfig.get()->returnAutoTimeout += (myConfig.getMode()->encoder);
+            myConfig.getMode()->encoder = 0;
+            if(fblink) u8g2.printf("%2.1f",myConfig.get()->returnAutoTimeout);
+            u8g2.setFont(fontName);
+            u8g2.setCursor(90,44-17);
+            u8g2.print("sec");
+            break;
           case Config::CONFIG_TARGET::AWAY_HOLDS:
             u8g2.setFont(u8g2_font_profont29_tr);
             u8g2.setCursor(0,40);
             myConfig.get()->awayMode = abs((myConfig.get()->awayMode + myConfig.getMode()->encoder) % Config::AWAY_MODES::AM_SIZE);
+            myConfig.getMode()->encoder = 0;
             if(fblink) u8g2.printf("%s",myConfig.AWAY_MODES_NAME[myConfig.get()->awayMode]);
             break;
           case Config::CONFIG_TARGET::INFO:

@@ -49,6 +49,9 @@ void handleLoadData(){
     root["teco"] = myConfig.get()->targetTemp[0];
     root["tnorm"] = myConfig.get()->targetTemp[1];
     root["tconf"] = myConfig.get()->targetTemp[2];
+    root["aautotimeout"] = myConfig.get()->returnAutoTimeout;
+    root["dsleep"] = myConfig.get()->displaySleep;
+    root["doff"] = myConfig.get()->displayPowerOff;
     root["tadelta"] = myConfig.get()->awayModify;
     root["tamode"] = myConfig.get()->awayMode;
     root["tprec"] = myConfig.get()->tempPrecision;
@@ -79,6 +82,9 @@ void handleSaveData(){
         myConfig.get()->targetTemp[0] = server.arg("teco").toFloat();
         myConfig.get()->targetTemp[1] = server.arg("tnorm").toFloat();
         myConfig.get()->targetTemp[2] = server.arg("tconf").toFloat();
+        myConfig.get()->returnAutoTimeout = server.arg("aautotimeout").toInt();
+        myConfig.get()->displaySleep = server.arg("dsleep").toInt();
+        myConfig.get()->displayPowerOff = server.arg("doff").toInt();
         myConfig.get()->awayModify = server.arg("tadelta").toFloat();
         myConfig.get()->awayMode = server.arg("tamode").toFloat();
         myConfig.get()->tempPrecision = server.arg("tprec").toFloat();

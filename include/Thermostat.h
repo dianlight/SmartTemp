@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @brief 
+ * 
+ */
+
 #define TARGET_TEMP         (myConfig.get()->targetTemp[CURRENT_HOLD] + \
                             ( \
                                 myConfig.get()->away?myConfig.get()->awayModify:0 \

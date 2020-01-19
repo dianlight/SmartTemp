@@ -34,7 +34,7 @@
 
 
 // General Config
-#define CONFIG_VERSION  "026"
+#define CONFIG_VERSION  "027"
 
 // 
 #define CONFIG_TARGET_STR    myConfig.CONFIG_TARGET_NAME[myConfig.getMode()->position]
@@ -71,7 +71,7 @@ class Config {
         const char* MODES_MQTT_NAME[3] = {"off","heat","auto"};
         const char* HOLDS_NAME[3] = {"Eco","Normal","Confort"};
         const char* HOLDS_MQTT_NAME[3] = {"Eco","Normal","Confort"};
-        const char* AWAY_MODES_NAME[4] = {"As Auto","Fix to Eco","Fix to Normal","Fix to Confort"};
+        const char* AWAY_MODES_NAME[4] = {"As Auto","To Eco","To Norm.","To Conf."};
 
     #ifndef ENABLE_MENU
     
@@ -79,6 +79,7 @@ class Config {
             ECO_TEMP = 0,
             NORMAL_TEMP,
             CONFORT_TEMP,
+            MANUAL_TO_AUTO_TIME,
             AWAY_DIFF,
             AWAY_HOLDS,
             //  TIME_INTERNET,
@@ -101,7 +102,7 @@ class Config {
         };
 
 
-        const char* CONFIG_TARGET_NAME[8] = {"Eco","Normal","Confort","Away Delta","Away Holds","Info","WiFi","Factory Reset"};
+        const char* CONFIG_TARGET_NAME[9] = {"Eco","Normal","Confort","Manual to Auto time","Away Delta","Away Holds","Info","WiFi","Factory Reset"};
 
     #endif 
 
@@ -144,6 +145,7 @@ class Config {
             float tempPrecision             = 0.2;
             uint8_t minSwitchTime           = 30;
             byte mode                       = MODES::AUTO;
+            time_t returnAutoTimeout        = 30;
             bool away                       = false;
             byte hold                       = HOLDS::NORMAL;
             DayProgram weekProgram[7];       
@@ -155,8 +157,8 @@ class Config {
             char mqtt_password[40]      = "";
             char mqtt_topic_prefix[128] = "";    
 
-            byte displaySleep           = 15;
-            byte displayPowerOff        = 30;
+            byte displaySleep           = 35;
+            byte displayPowerOff        = 60;
             byte displayContrast        = 200;
         };
 

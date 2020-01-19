@@ -16,6 +16,8 @@ PubSubClient client(espClient);
 time_t lastRegister, lastRetry = 0;
 extern bool heating;
 extern float curTemp;
+extern unsigned long manualTime;
+
 
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("\nMessage arrived [");
@@ -32,6 +34,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
     for (byte i = 0; i < Config::MODES::M_SIZE; i++){
       if(memcmp(payload,myConfig.MODES_MQTT_NAME[i],3) == 0){
         myConfig.get()->mode = i;
+        if(myConfig.get()->mode == Config::MANUAL){
+          manualTime = millis();
+        }
         break;  
       }
     }
@@ -40,6 +45,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
       if(memcmp(payload,myConfig.HOLDS_MQTT_NAME[i],3) == 0){
         myConfig.get()->hold = i;
         myConfig.get()->mode = Config::MANUAL;
+        manualTime = millis();
         break;  
       }
     }
