@@ -1,3 +1,3 @@
 #!/bin/bash
-npm run compile
+npm run compile && \
 pio run --target uploadfs

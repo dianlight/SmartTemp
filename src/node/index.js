@@ -1,6 +1,8 @@
 import "./index.html"
 import "mini.css/dist/mini-default.css"
+import "./holds.css"
 import "./favicon.ico"
+
 import "chibijs"
 import populate from "populate.js";
 
@@ -27,6 +29,26 @@ function show(what){
 window.show = show;
 
 $().ready(function(){
-  show("home");
+
+  // Home
+
+  // Program
+  for(let d of ['mon','tue','wed','thu','fri','sat','sun']){
+    for(let h=0; h < 24; h++){
+      $("#"+d)
+        .htmlAppend("<sup>"+h+"<sup>")
+        .htmlAppend("<div class=\"eco\"></div>")
+        .htmlAppend("<div class=\"normal\"></div>")
+        .htmlAppend("<div class=\"eco\"></div>")
+        .htmlAppend("<div class=\"confort\"></div>");
+    }
+  }
+
+  // Config
   reload();
+
+  // StartPage
+  show("home");
+  
+
 });

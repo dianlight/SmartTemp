@@ -20,7 +20,7 @@ var config = {
       }, 
       {
         test: /\.jpe?g$|\.ico$|\.gif$|\.png$|\.svg$|\.woff$|\.ttf$|\.wav$|\.mp3$/,
-        loader: 'file-loader?name=[name].[ext]'  // <-- retain original file name
+        loader: 'file-loader?name=[name].[ext]'  // <- retain original file name
       },
       {
         test: /\.js$/,
@@ -50,7 +50,8 @@ module.exports = (env, argv) => {
 
   if (argv.mode === 'production') {
     config.plugins.push(new CompressionPlugin({
-            deleteOriginalAssets: true
+            deleteOriginalAssets: true,
+            exclude: /\.html$/,
         }));
   }
 

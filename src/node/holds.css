@@ -1,0 +1,40 @@
+.eco, .normal, .confort {
+    margin-top: 15px;
+    border: 1px solid;
+    min-height: 5px;
+    background-color: black;
+    border-color: gray;
+    min-width: 5px;
+    display: inline-block;
+}
+
+.eco:hover, .normal:hover, .confort:hover {
+    background-color: darkcyan;
+    cursor: pointer;    
+}
+
+.normal {
+    margin-top: 10px;
+    min-height: 10px;
+}
+
+.confort {
+    margin-top: 5px;
+    min-height: 15px;
+}
+
+.plist .row {
+    min-height: 34px;
+}
+
+.plist .row:nth-of-type(odd) {
+    background-color: gainsboro;
+
+}
+
+.plist sup {
+    margin-left: 1px;
+    margin-right: 1px;
+}
+
+

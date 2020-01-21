@@ -5,32 +5,148 @@
         <script src="main.js"></script>
     </head>
     <body>
-        <header class="sticky">
-            <a href="#" class="logo">SmartTemp</a>
-            <a href="#" class="button" onclick="show('home')" >Home</a>
-            <a href="#" class="button" onclick="show('program')">Program</a>
-            <a href="#" class="button" onclick="show('config')">Config</a>
-        </header>
+    <header class="sticky">
+        <a href="#" class="logo" onclick="show('home')" >SmartTemp</a>
+        <a href="#" class="button" onclick="show('program')">Program</a>
+        <a href="#" class="button" onclick="show('config')">Config</a>
+    </header>
         
-        <label for="drawer-control" class="drawer-toggle"></label>
-<!--
-        <input type="checkbox" id="drawer-control" class="drawer">
-        <div>
-          <label for="drawer-control" class="drawer-close"></label>
-          <ul>
-              <li><a href="#">Setup</a></li>
-              < !--
-              <li><a href="#">Week Program</a></li>
-              <li><a href="#">Calibration Setup</a></li>
-              <li><a href="#">Network Setup</a></li>
-              -- >
-          </ul>         
-        </div> 
--->          
-    <div id="home" class="panel">
+    <div id="home" class="panel container">
+        <div class="row">
+            <div class="card">
+                <div class="section dark">
+                    <h3>Current Temperature</h3>
+                </div>
+                <div class="section">
+                    <div class="row">
+                        <div class="col-sm"></div>  
+                        <div class="col-sm">
+                            <h1 id="temp1">20.0&deg;C</h1>
+                        </div>
+                        <div class="col-sm"></div> 
+                    </div>
+                </div>
+            </div>
+        </div>
     </div> 
-    <div id="program" class="panel">
-    </div> 
+    <div id="program" class="panel container">
+        <div class="card fluid">
+            <div class="section dark">
+                <h3>Week program</h3>
+            </div>
+            <div class="section plist">
+                <div class="row">
+                    <div class="col-sm-1 dark">Monday</div>
+                    <div id="mon" class="col-sm"></div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-1 dark">Tuesday</div>
+                    <div id="tue" class="col-sm"></div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-1 dark">Wednesday</div>
+                    <div id="wed" class="col-sm"></div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-1 dark">Thursday</div>
+                    <div id="thu" class="col-sm"></div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-1 dark">Friday</div>
+                    <div id="fri" class="col-sm"></div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-1 dark">Saturday</div>
+                    <div id="sat" class="col-sm"></div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-1 dark">Sunday</div>
+                    <div id="sun" class="col-sm"></div>
+                </div>
+            </div>
+        </div>
+
+        <!--
+        <table>
+            <caption>Week Program</caption>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th><small>00</small></th>
+                    <th><small>01</small></th>
+                    <th><small>02</small></th>
+                    <th><small>03</small></th>
+                    <th><small>04</small></th>
+                    <th><small>05</small></th>
+                    <th><small>06</small></th>
+                    <th><small>07</small></th>
+                    <th><small>08</small></th>
+                    <th><small>09</small></th>
+                    <th><small>10</small></th>
+                    <th><small>11</small></th>
+                    <th><small>12</small></th>
+                    <th><small>13</small></th>
+                    <th><small>14</small></th>
+                    <th><small>15</small></th>
+                    <th><small>16</small></th>
+                    <th><small>17</small></th>
+                    <th><small>18</small></th>
+                    <th><small>19</small></th>
+                    <th><small>20</small></th>
+                    <th><small>21</small></th>
+                    <th><small>22</small></th>
+                    <th><small>23</small></th>
+                </tr>
+            </thead>
+            <tbody>
+              <tr>                 
+                <td data-label="d" class="dark">Monday</td>
+                <td data-label="00">
+                    <div id="mon" class="row">
+                        <sub>00</sub>
+                        <div class="eco"></div>
+                        <div class="normal"></div>
+                        <div class="confort"></div>
+                        <div class="normal"></div>
+                    </div>
+                </td>
+                <td data-label="01"><small>&#x2580;</small><small>&#x2584;</small><small>&#x2580;</small><small>&#x2582;</small></td>
+                <td data-label="02"><small>&#x2582;</small><small>&#x2582;</small><small>&#x2582;</small><small>&#x2582;</small></td>
+                <td data-label="03"><small>&#x2588;</small><small>&#x2588;</small><small>&#x2582;</small><small>&#x2582;</small></td>
+                <td data-label="04"><small>&#x2588;</small><small>&#x2588;</small><small>&#x2582;</small><small>&#x2582;</small></td>
+                <td data-label="05"><small>&#x2588;</small><small>&#x2588;</small><small>&#x2582;</small><small>&#x2582;</small></td>
+                <td data-label="06"><small>&#x2591;</small><small>&#x2591;</small><small>&#x2592;</small><small>&#x2591;</small></td>
+                <td data-label="07"><small>&#x2591;</small><small>&#x2593;</small><small>&#x2592;</small><small>&#x2592;</small></td>
+                <td data-label="08"><small>&#x2591;</small><small>&#x2593;</small><small>&#x2592;</small><small>&#x2592;</small></td>
+                <td data-label="09"><small>&#x2591;</small><small>&#x2593;</small><small>&#x2592;</small><small>&#x2592;</small></td>
+                <td data-label="10"><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small></td>
+                <td data-label="11"><small>&#x2745;</small><small>&#x2745;</small><small>&#x2592;</small><small>&#x2592;</small></td>
+                <td data-label="12"><small>&#x2745;</small><small>&#x2593;</small><small>&#x2592;</small><small>&#x2592;</small></td>
+                <td data-label="13"><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small></td>
+                <td data-label="14"><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small></td>
+                <td data-label="15"><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small></td>
+                <td data-label="16"><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small></td>
+                <td data-label="17"><small>&#x2B26;</small><small>&#x2B25;</small><small>&#x2B25;</small><small>&#x2B26;</small></td>
+                <td data-label="18"><small>&#x2B26;</small><small>&#x2B25;</small><small>&#x2B25;</small><small>&#x2B26;</small></td>
+                <td data-label="19"><small>&#x2B26;</small><small>&#x2B25;</small><small>&#x2B25;</small><small>&#x2B26;</small></td>
+                <td data-label="20"><small>&#x2B19;</small><small>&#x2B19;</small><small>&#x2B25;</small><small>&#x2B26;</small></td>
+                <td data-label="21"><small>&#x2B19;</small><small>&#x2B19;</small><small>&#x2B25;</small><small>&#x2B26;</small></td>
+                <td data-label="22"><small>&#x2B19;</small><small>&#x2B19;</small><small>&#x2B25;</small><small>&#x2B26;</small></td>
+                <td data-label="23"><small>&#x2B19;</small><small>&#x2B19;</small><small>&#x2B25;</small><small>&#x2B26;</small></td>
+              </tr>
+                <td data-label="Tuesday">Wilberts</td>
+                <td data-label="Wednesday">MrOne</td>
+                <td data-label="Thursday">MrOne</td>
+                <td data-label="Friday">MrOne</td>
+                <td data-label="Saturday">MrOne</td>
+                <td data-label="Sunday">MrOne</td>
+              </tr>
+            </tbody>
+          </table>
+        --> 
+
+
+    </div>
     <div id="config" class="panel">    
         <form id="configForm">
             <fieldset name="Targets">
