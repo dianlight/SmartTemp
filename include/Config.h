@@ -1,7 +1,5 @@
 #pragma once
 
-//#define STR(x) x
- 
 #ifndef SMT_VERSION
     #define SMT_VERSION NdN
 #endif
@@ -13,8 +11,6 @@
 //#define DEBUG_MQTT
 #define DEBUG_EVENT
 //#define DEBUG_SERIAL_MENU
-
-//#define ENABLE_MENU
 
 #include <time.h>
 #include <TZ.h>
@@ -73,8 +69,6 @@ class Config {
         const char* HOLDS_MQTT_NAME[3] = {"Eco","Normal","Confort"};
         const char* AWAY_MODES_NAME[4] = {"As Auto","To Eco","To Norm.","To Conf."};
 
-    #ifndef ENABLE_MENU
-    
         enum CONFIG_TARGET {
             ECO_TEMP = 0,
             NORMAL_TEMP,
@@ -103,9 +97,6 @@ class Config {
 
 
         const char* CONFIG_TARGET_NAME[9] = {"Eco","Normal","Confort","Manual to Auto time","Away Delta","Away Holds","Info","WiFi","Factory Reset"};
-
-    #endif 
-
 
         struct __attribute__((packed, aligned(1))) DayProgram {
             byte hourQuarterHolds[24*4] = {
@@ -165,8 +156,6 @@ class Config {
         Config();
         void saveConfig();
         StoreStruct *get();
-        #ifndef ENABLE_MENU
-            ConfigModeStruct *getMode();
-        #endif
+        ConfigModeStruct *getMode();
 };
 
