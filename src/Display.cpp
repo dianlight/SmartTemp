@@ -209,7 +209,7 @@ void loopDisplay() {
           u8g2.printf("%s",CURRENT_MODE_STR);
           u8g2.setCursor(5*fontX,63);
           u8g2.printf("%s",CURRENT_HOLD_STR);
-          u8g2.setCursor(128-45,63);
+          u8g2.setCursor(128-42,63);
           u8g2.printf("%s  %.2d:%.2d",DAYSNAME[getNTPTime()->tm_wday].c_str(),getNTPTime()->tm_hour, getNTPTime()->tm_min);
         } else {
           u8g2.printf("%s","Config");

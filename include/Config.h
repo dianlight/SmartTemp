@@ -136,7 +136,7 @@ class Config {
             float tempPrecision             = 0.2;
             uint8_t minSwitchTime           = 30;
             byte mode                       = MODES::AUTO;
-            time_t returnAutoTimeout        = 30;
+            uint8_t returnAutoTimeout       = 30;
             bool away                       = false;
             byte hold                       = HOLDS::NORMAL;
             DayProgram weekProgram[7];       
