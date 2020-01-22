@@ -225,9 +225,9 @@ void setupMQTT() {
 }
 
 void loopMQTT() {
-  if(lastRegister !=0 && millis() - lastRegister > 60000*30){  // 30min autoregister mtqq
-    client.disconnect();
-  }
+//  if(lastRegister !=0 && millis() - lastRegister > 60000*30){  // 30min autoregister mtqq
+//    client.disconnect();
+//  }
   if (!client.loop() && millis() - lastRetry > 30000) {
     if(reconnect())lastRegister = millis();
     lastRetry = millis();

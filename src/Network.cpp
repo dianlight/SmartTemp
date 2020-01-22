@@ -3,19 +3,14 @@
 #include <ESP8266WiFi.h>
 #include "Display.h"
 #include <WiFiUdp.h>
-//#include <ezTime.h>
 
 //needed for library
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
 
-//#include <ArduinoJson.h>          //https://github.com/bblanchon/ArduinoJson
-
 #include "Config.h"
 extern Config myConfig;
-
-//extern Timezone myTZ;  
 
 
 //callback notifying us of the need to save config
@@ -80,7 +75,7 @@ void setupWifi(bool captiveConfig) {
     
     //reset settings - for testing
   //  if(myConfig.get()->resetConfig){
-      wifiManager.resetSettings();
+  //    wifiManager.resetSettings();
   //    myConfig.get()->resetConfig = false;
   //  }
 
