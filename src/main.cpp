@@ -71,7 +71,7 @@ void setup()
 
     // Initialize RemoteDebug
 
-    Debug.begin("SmartTemp"); // Initialize the WiFi server
+    Debug.begin("SmartTemp",Debug.VERBOSE); // Initialize the WiFi server
 
     //Debug.setPassword("r3m0t0."); // Password for WiFi client connection (telnet or webapp)  ?
 

@@ -2,6 +2,10 @@
 #include <Arduino.h>
 #include "at8i2cGateway.h"
 
+#ifdef DEBUG_REMOTE
+  #include <RemoteDebug.h>
+  extern RemoteDebug Debug;
+#endif
 
 
 AT8I2CGATEWAY::AT8I2CGATEWAY(int i2caddress) {
@@ -31,10 +35,7 @@ bool AT8I2CGATEWAY::getRelay(){
 
 void AT8I2CGATEWAY::setRelay(bool on){
     #ifdef DEBUG_I2C_OUT
-        Serial.printf("I2C<--");
-        Serial.print(_i2caddress,HEX);
-        Serial.printf("<--");
-        Serial.print(sizeof(I2C_Packet_t));
+        debugV("I2C<--%x<--%d",_i2caddress,sizeof(I2C_Packet_t));
     #endif
     I2C_Packet_t data;
     data.sensorData.out.cmd = RELAY;

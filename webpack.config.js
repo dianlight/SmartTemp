@@ -5,23 +5,44 @@ const TerserPlugin = require('terser-webpack-plugin');
 
 var config = {
   entry: {
-    main: './src/node/index.js'
+    main: path.resolve(__dirname, './src/node/index.js'),
+//    remoteDebugApp: path.resolve(__dirname, './src/node/RemoteDebugApp/index.html')
   },
   output: {
-    path: path.resolve(__dirname, 'data')
+//    filename: '[name].[id].[ext]',
+    path: path.resolve(__dirname, 'data'),
+    publicPath: "/"
   },
   plugins: [],
   module: {
     rules: [
-      { test: /\.css$/i, use: ['style-loader', 'css-loader'] },
-      {
-        test: /\.html$/,
-        use: ['file-loader?name=[name].[ext]', 'extract-loader', 'html-loader?minimize=true'],
-      }, 
+      { test: /\.css(\?mtime=\d+)?$/i, use: ['style-loader', 'css-loader'] },
       {
         test: /\.jpe?g$|\.ico$|\.gif$|\.png$|\.svg$|\.woff$|\.ttf$|\.wav$|\.mp3$/,
-        loader: 'file-loader?name=[name].[ext]'  // <- retain original file name
+        loader: 'file-loader?name=[path][name].[ext]'  // <- retain original file name
       },
+      {
+        test: /\.html$/,
+        use: ['file-loader', 
+              { loader: 'extract-loader',
+                options: {
+                  name: '[path][name].[ext]',
+                  publicPath: (url,resourcePath,context) => { 
+                    console.log("----------------------------------------------------------");
+                    console.log(url,resourcePath,context);
+                    return '../'.repeat(path.relative(path.resolve('src/node'), context.context).split('/').length); 
+                  },
+                }
+              },
+              { 
+                loader: 'html-loader',
+                options: {
+                  minimize: true,
+                  attrs: ['img:src','link:href','iframe:src'],
+                } 
+              },
+            ]
+      }, 
       {
         test: /\.js$/,
         use: ["source-map-loader"],

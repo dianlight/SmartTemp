@@ -44,8 +44,7 @@ String getContentType(String filename){
 
 void handleLoadData(){
 
-    StaticJsonBuffer<770> jsonBuffer;
-    JsonObject& root = jsonBuffer.createObject();
+    StaticJsonDocument<770> root;
     root["teco"] = myConfig.get()->targetTemp[0];
     root["tnorm"] = myConfig.get()->targetTemp[1];
     root["tconf"] = myConfig.get()->targetTemp[2];
@@ -62,9 +61,14 @@ void handleLoadData(){
     root["user"] = myConfig.get()->mqtt_user;
     root["password"] = myConfig.get()->mqtt_password;
     root["tprefix"] = myConfig.get()->mqtt_topic_prefix;
-    String json = "";
-    root.printTo(json);
 
+
+
+    String json="";
+    serializeJson(root,json);
+    #ifdef DEBUG_WEBSERVER
+      debugV("Response: %s",json.c_str());
+    #endif
     server.send(200,"application/json",json.c_str());
 }
 
@@ -112,7 +116,7 @@ String indexKeyProcessor(const String& key)
 }
 
 bool handleFileRead(String path){  // send the right file to the client (if it exists)
-  Serial.println("handleFileRead: " + path);
+  debugV("handleFileRead: %s",path.c_str());
   if(path.endsWith("/")) path += "index.html";           // If a folder is requested, send the index file
   String contentType = getContentType(path);             // Get the MIME type
   String pathWithGz = path + ".gz";
@@ -125,11 +129,11 @@ bool handleFileRead(String path){  // send the right file to the client (if it e
       File file = SPIFFS.open(path, "r");                    // Open the file
       size_t sent = server.streamFile(file, contentType);    // Send it to the client
       file.close();                                          // Close the file again
-      Serial.printf("\tSent file: %s (%d)",path.c_str(),sent);
+      debugV("Sent file: %s (%d)",path.c_str(),sent);
     }
     return true;
   }
-  Serial.println(String("\tFile Not Found: ") + path);
+  debugV("File Not Found: %s",path.c_str());
   return false;                                          // If the file doesn't exist, return false
 }
 
@@ -149,7 +153,7 @@ void setupWebServer(){
     });
 
     server.begin();                           // Actually start the server
-    Serial.println("HTTP server started");
+    debugV("HTTP server started");
 }
 
 

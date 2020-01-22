@@ -4,12 +4,16 @@
     #define SMT_VERSION NdN
 #endif
 
+// ArduinoJson Size: 5=459124 6=460132 6opt=460116
+
+
 #define DEBUG_REMOTE
 //#define DEBUG_I2C_SCAN
 //#define DEBUG_I2C_IN
-#define DEBUG_I2C_OUT
-//#define DEBUG_MQTT
+//#define DEBUG_I2C_OUT
+#define DEBUG_MQTT
 #define DEBUG_EVENT
+#define DEBUG_WEBSERVER
 //#define DEBUG_SERIAL_MENU
 
 #include <time.h>
