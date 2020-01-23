@@ -18,5 +18,5 @@ void  bootAPDisplay(String AP);
 void  bootConnectedDisplay();
 
 void displayError(String Error);  
-void displayProgress(u8 perc);
+void displayProgress(u8 perc,String type);
 

@@ -209,7 +209,7 @@ void loopDisplay() {
           u8g2.printf("%s",CURRENT_MODE_STR);
           u8g2.setCursor(5*fontX,63);
           u8g2.printf("%s",CURRENT_HOLD_STR);
-          u8g2.setCursor(128-42,63);
+          u8g2.setCursor(128-47,63);
           u8g2.printf("%s  %.2d:%.2d",DAYSNAME[getNTPTime()->tm_wday].c_str(),getNTPTime()->tm_hour, getNTPTime()->tm_min);
         } else {
           u8g2.printf("%s","Config");
@@ -392,7 +392,7 @@ void clearDisplay() {
   u8g2.clear();
 };
 
-void displayProgress(u8 perc)
+void displayProgress(u8 perc,String type)
 {	
   u8g2.setPowerSave(0);
   u8g2.setContrast(myConfig.get() -> displayContrast);
@@ -400,7 +400,7 @@ void displayProgress(u8 perc)
   u8g2.clearBuffer();
   u8g2.firstPage();
   do {
-      u8g2.drawUTF8(0,12,"OTA Update");
+      u8g2.drawUTF8(0,12,("OTA "+type+" Update").c_str());
       u8g2.setCursor(52,26);
       u8g2.printf("%.2d%%",perc);
       u8g2.setDrawColor(2);

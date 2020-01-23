@@ -7,7 +7,7 @@
 
 
 static bool inOTA = false;
-
+static String type;
 
 
 void setupOTA() {
@@ -30,7 +30,6 @@ void setupOTA() {
   ArduinoOTA.onStart([]() {
     sendMQTTAvail(false);
     inOTA=true;
-    String type;
     if (ArduinoOTA.getCommand() == U_FLASH) {
       type = "sketch";
     } else { // U_FS
@@ -46,7 +45,7 @@ void setupOTA() {
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Serial.print(".");
-    displayProgress((progress / (total / 100)));
+    displayProgress((progress / (total / 100)),type);
   });
   ArduinoOTA.onError([](ota_error_t error) {
     Serial.printf("Error[%u]: ", error);

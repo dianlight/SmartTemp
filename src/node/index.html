@@ -1,19 +1,18 @@
 <html>
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>SmartTemp | {{CURRENT_MODE}}</title>
-        <script src="main.js"></script>
-    </head>
-    <body>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SmartTemp | {{CURRENT_MODE}}</title>
+    <script src="main.js"></script>
+</head>
+
+<body>
     <header class="sticky">
-        <a href="#" class="logo" onclick="show('home')" >SmartTemp</a>
+        <a href="#" class="logo" onclick="show('home')">SmartTemp</a>
         <a href="#" class="button" onclick="show('program')">Program</a>
         <a href="#" class="button" onclick="show('config')">Config</a>
-<!--
-        <a href="#" class="button" onclick="show('debug')">Debug</a>
--->        
     </header>
-        
+
     <div id="home" class="panel container">
         <div class="row">
             <div class="card">
@@ -22,34 +21,23 @@
                 </div>
                 <div class="section">
                     <div class="row">
-                        <div class="col-sm"></div>  
+                        <div class="col-sm"></div>
                         <div class="col-sm">
                             <h1 id="temp1">20.0&deg;C</h1>
                         </div>
-                        <div class="col-sm"></div> 
+                        <div class="col-sm"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-<!--
-    <div id="debug" class="panel container">
-        <div class="row">
-            <div class="card">
-                <div class="section media">
-                    <iframe src="RemoteDebugApp/index.html"></iframe>
-                </div>
-            </div>
-        </div>
-    </div> 
--->    
 
     <div id="program" class="panel container">
         <div class="card fluid">
             <div class="section dark">
                 <h3>Week program</h3>
             </div>
-            <div class="section plist">
+            <div class="section plist noselect">
                 <div class="row">
                     <div class="col-sm-1 dark">Monday</div>
                     <div id="mon" class="col-sm"></div>
@@ -79,126 +67,56 @@
                     <div id="sun" class="col-sm"></div>
                 </div>
             </div>
+            <form id="programForm" class="hidden">
+                <input type="hidden" id="dmon" name="day_0" value=""/>
+                <input type="hidden" id="dtue" name="day_1" value=""/>
+                <input type="hidden" id="dwed" name="day_2" value=""/>
+                <input type="hidden" id="dthu" name="day_3" value=""/>
+                <input type="hidden" id="dfri" name="day_4" value=""/>
+                <input type="hidden" id="dsat" name="day_5" value=""/>
+                <input type="hidden" id="dsun" name="day_6" value=""/>
+            </form>
         </div>
 
-        <!--
-        <table>
-            <caption>Week Program</caption>
-            <thead>
-                <tr>
-                    <th></th>
-                    <th><small>00</small></th>
-                    <th><small>01</small></th>
-                    <th><small>02</small></th>
-                    <th><small>03</small></th>
-                    <th><small>04</small></th>
-                    <th><small>05</small></th>
-                    <th><small>06</small></th>
-                    <th><small>07</small></th>
-                    <th><small>08</small></th>
-                    <th><small>09</small></th>
-                    <th><small>10</small></th>
-                    <th><small>11</small></th>
-                    <th><small>12</small></th>
-                    <th><small>13</small></th>
-                    <th><small>14</small></th>
-                    <th><small>15</small></th>
-                    <th><small>16</small></th>
-                    <th><small>17</small></th>
-                    <th><small>18</small></th>
-                    <th><small>19</small></th>
-                    <th><small>20</small></th>
-                    <th><small>21</small></th>
-                    <th><small>22</small></th>
-                    <th><small>23</small></th>
-                </tr>
-            </thead>
-            <tbody>
-              <tr>                 
-                <td data-label="d" class="dark">Monday</td>
-                <td data-label="00">
-                    <div id="mon" class="row">
-                        <sub>00</sub>
-                        <div class="eco"></div>
-                        <div class="normal"></div>
-                        <div class="confort"></div>
-                        <div class="normal"></div>
-                    </div>
-                </td>
-                <td data-label="01"><small>&#x2580;</small><small>&#x2584;</small><small>&#x2580;</small><small>&#x2582;</small></td>
-                <td data-label="02"><small>&#x2582;</small><small>&#x2582;</small><small>&#x2582;</small><small>&#x2582;</small></td>
-                <td data-label="03"><small>&#x2588;</small><small>&#x2588;</small><small>&#x2582;</small><small>&#x2582;</small></td>
-                <td data-label="04"><small>&#x2588;</small><small>&#x2588;</small><small>&#x2582;</small><small>&#x2582;</small></td>
-                <td data-label="05"><small>&#x2588;</small><small>&#x2588;</small><small>&#x2582;</small><small>&#x2582;</small></td>
-                <td data-label="06"><small>&#x2591;</small><small>&#x2591;</small><small>&#x2592;</small><small>&#x2591;</small></td>
-                <td data-label="07"><small>&#x2591;</small><small>&#x2593;</small><small>&#x2592;</small><small>&#x2592;</small></td>
-                <td data-label="08"><small>&#x2591;</small><small>&#x2593;</small><small>&#x2592;</small><small>&#x2592;</small></td>
-                <td data-label="09"><small>&#x2591;</small><small>&#x2593;</small><small>&#x2592;</small><small>&#x2592;</small></td>
-                <td data-label="10"><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small></td>
-                <td data-label="11"><small>&#x2745;</small><small>&#x2745;</small><small>&#x2592;</small><small>&#x2592;</small></td>
-                <td data-label="12"><small>&#x2745;</small><small>&#x2593;</small><small>&#x2592;</small><small>&#x2592;</small></td>
-                <td data-label="13"><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small></td>
-                <td data-label="14"><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small></td>
-                <td data-label="15"><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small></td>
-                <td data-label="16"><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small><small>&#x2B26;</small></td>
-                <td data-label="17"><small>&#x2B26;</small><small>&#x2B25;</small><small>&#x2B25;</small><small>&#x2B26;</small></td>
-                <td data-label="18"><small>&#x2B26;</small><small>&#x2B25;</small><small>&#x2B25;</small><small>&#x2B26;</small></td>
-                <td data-label="19"><small>&#x2B26;</small><small>&#x2B25;</small><small>&#x2B25;</small><small>&#x2B26;</small></td>
-                <td data-label="20"><small>&#x2B19;</small><small>&#x2B19;</small><small>&#x2B25;</small><small>&#x2B26;</small></td>
-                <td data-label="21"><small>&#x2B19;</small><small>&#x2B19;</small><small>&#x2B25;</small><small>&#x2B26;</small></td>
-                <td data-label="22"><small>&#x2B19;</small><small>&#x2B19;</small><small>&#x2B25;</small><small>&#x2B26;</small></td>
-                <td data-label="23"><small>&#x2B19;</small><small>&#x2B19;</small><small>&#x2B25;</small><small>&#x2B26;</small></td>
-              </tr>
-                <td data-label="Tuesday">Wilberts</td>
-                <td data-label="Wednesday">MrOne</td>
-                <td data-label="Thursday">MrOne</td>
-                <td data-label="Friday">MrOne</td>
-                <td data-label="Saturday">MrOne</td>
-                <td data-label="Sunday">MrOne</td>
-              </tr>
-            </tbody>
-          </table>
-        --> 
-
-
     </div>
-    <div id="config" class="panel">    
+    <div id="config" class="panel">
         <form id="configForm">
             <fieldset name="Targets">
-              <legend>Targets</legend>
-              <div class="row">
-                <div class="col-sm-12 col-md-6">
-                    <label for="teco">Eco Temperature</label>
-                    <input type="text" id="teco" name="teco" placeholder=""/>&#x2103;
+                <legend>Targets</legend>
+                <div class="row">
+                    <div class="col-sm-12 col-md-6">
+                        <label for="teco">Eco Temperature</label>
+                        <input type="text" id="teco" name="teco" placeholder="" />&#x2103;
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <label for="tnorm">Normal Temperature</label>
+                        <input type="text" id="tnorm" name="tnorm" placeholder="" />&#x2103;
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <label for="tconf">Confort Temperature</label>
+                        <input type="text" id="tconf" name="tconf" placeholder="" />&#x2103;
+                    </div>
                 </div>
-                <div class="col-sm-12 col-md-6">
-                    <label for="tnorm">Normal Temperature</label>
-                    <input type="text" id="tnorm" name="tnorm" placeholder=""/>&#x2103;
-                </div>
-                <div class="col-sm-12 col-md-6">
-                    <label for="tconf">Confort Temperature</label>
-                    <input type="text" id="tconf" name="tconf" placeholder=""/>&#x2103;
-                </div>
-              </div>
             </fieldset>
             <fieldset name="Automation">
                 <legend>Automation</legend>
                 <div class="row">
                     <div class="col-sm-12 col-md-6">
                         <label for="aautotimeout">Manual to Auto return time</label>
-                        <input type="text" id="aautotimeout" name="aautotimeout" placeholder=""/> sec (0 = newer return)
+                        <input type="text" id="aautotimeout" name="aautotimeout" placeholder="" /> sec (0 = newer
+                        return)
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-sm-12 col-md-6">
                         <label for="dsleep">Display Low Energy</label>
-                        <input type="text" id="dsleep" name="dsleep" placeholder=""/> sec
+                        <input type="text" id="dsleep" name="dsleep" placeholder="" /> sec
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-sm-12 col-md-6">
                         <label for="doff">Display Off</label>
-                        <input type="text" id="doff" name="doff" placeholder=""/> sec
+                        <input type="text" id="doff" name="doff" placeholder="" /> sec
                     </div>
                 </div>
             </fieldset>
@@ -207,7 +125,7 @@
                 <div class="row">
                     <div class="col-sm-12 col-md-6">
                         <label for="tadelta">Away &#x394;</label>
-                        <input type="text" id="tadelta" name="tadelta" placeholder=""/>&#x2103;
+                        <input type="text" id="tadelta" name="tadelta" placeholder="" />&#x2103;
                     </div>
                 </div>
                 <div class="row">
@@ -227,11 +145,11 @@
                 <div class="row">
                     <div class="col-sm-12 col-md-6">
                         <label for="tprec">Precision</label>
-                        <input type="text" id="tprec" name="tprec" placeholder=""/>&#x2103;
+                        <input type="text" id="tprec" name="tprec" placeholder="" />&#x2103;
                     </div>
                     <div class="col-sm-12 col-md-6">
                         <label for="sres">Switch Resolution</label>
-                        <input type="text" id="sres" name="sres" placeholder=""/>sec
+                        <input type="text" id="sres" name="sres" placeholder="" />sec
                     </div>
                 </div>
             </fieldset>
@@ -240,101 +158,46 @@
                 <div class="row">
                     <div class="col-sm-12 col-md-6">
                         <label for="nname">Node name</label>
-                        <input type="text" id="nname" name="nname" placeholder=""/>
+                        <input type="text" id="nname" name="nname" placeholder="" />
                     </div>
                     <div class="col-sm-12 col-md-6">
                         <label for="saddress">Server Address</label>
-                        <input type="text" id="saddress" name="saddress" placeholder=""/>
+                        <input type="text" id="saddress" name="saddress" placeholder="" />
                     </div>
                     <div class="col-sm-12 col-md-6">
                         <label for="port">Port</label>
-                        <input type="text" id="port" name="port" placeholder=""/>
+                        <input type="text" id="port" name="port" placeholder="" />
                     </div>
                     <div class="col-sm-12 col-md-6">
                         <label for="user">User</label>
-                        <input type="text" id="user" name="user" placeholder=""/>
+                        <input type="text" id="user" name="user" placeholder="" />
                     </div>
                     <div class="col-sm-12 col-md-6">
                         <label for="password">Password</label>
-                        <input type="password" id="password" name="password" placeholder=""/>
+                        <input type="password" id="password" name="password" placeholder="" />
                     </div>
                     <div class="col-sm-12 col-md-6">
                         <label for="tprefix">Topic prefix</label>
-                        <input type="text" id="tprefix" name="tprefix" placeholder=""/>
+                        <input type="text" id="tprefix" name="tprefix" placeholder="" />
                     </div>
                 </div>
             </fieldset>
-            <!--
-            <fieldset name="WeekProgram">
-                <legend>WeekProgram</legend>
-                <div class="row">
-                    <div class="col-sm-12 col-md-6">
-                        <label for="mon">Monday</label>
-                        <input type="text" id="mon"  placeholder=""/>
-                    </div>
-                    <div class="col-sm-12 col-md-6">
-                        <label for="tue">Tuesday</label>
-                        <input type="text" id="tue" placeholder=""/>
-                    </div>
-                    <div class="col-sm-12 col-md-6">
-                        <label for="wed">Wednesday</label>
-                        <input type="text" id="wed" placeholder=""/>
-                    </div>
-                    <div class="col-sm-12 col-md-6">
-                        <label for="thu">Thursday</label>
-                        <input type="text" id="thu" placeholder=""/>
-                    </div>
-                    <div class="col-sm-12 col-md-6">
-                        <label for="fri">Friday</label>
-                        <input type="text" id="fri" placeholder=""/>
-                    </div>
-                    <div class="col-sm-12 col-md-6">
-                        <label for="sat">Saturday</label>
-                        <input type="text" id="sat" placeholder=""/>
-                    </div>
-                    <div class="col-sm-12 col-md-6">
-                        <label for="sun">Sunday</label>
-                        <input type="text" id="sun" placeholder=""/>
-                    </div>
+        </form>
+    </div>
+
+    <footer class="sticky">
+        <div class="row">
+            <div class="col-sm-12 col-md-10 col-sm-last">
+                <p>Version: {{VERSION}} &#xA9; {{COPYRIGHT}}</p>
+            </div>
+            <div class="col-sm-12 col-md-2 col-md-last">
+                <div class="button-group">
+                    <button class="primary" onclick="save()">Save</button>
+                    <button class="secondary" onclick="reload()">Cancel</button>
                 </div>
-            </fieldset>
-        -->
-          </form>
-        </div>  
+            </div>
+        </div>
+    </footer>
+</body>
 
-        <footer class="sticky">
-            <div class="row">
-                <div class="col-sm-12 col-md-10 col-sm-last">
-                    <p>Version: {{VERSION}} &#xA9; {{COPYRIGHT}}</p>
-                </div>
-                <div class="col-sm-12 col-md-2 col-md-last">
-                    <div class="button-group">
-                        <button class="primary" onclick="save()" >Save</button>
-                        <button class="secondary" onclick="reload()">Cancel</button>
-                    </div>
-                </div>
-            </div>        
-        </footer>
-<!--
-        <script>
-            function reload(){
-                  $().ajax("load","GET",function(data,status){
-                      console.log(status,data);
-                      populate($("#configForm")[0],JSON.parse(data));
-                  });
-
-            }
-
-            function save(){
-                $("#configForm").ajax("save","POST",function(data,status){
-                    reload();
-                });
-            }
-
-            $().ready(function(){
-                reload();
-            });
-        </script>
-    -->        
-    </body>
 </html>

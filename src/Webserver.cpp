@@ -44,7 +44,7 @@ String getContentType(String filename){
 
 void handleLoadData(){
 
-    StaticJsonDocument<770> root;
+    StaticJsonDocument<1024> root;
     root["teco"] = myConfig.get()->targetTemp[0];
     root["tnorm"] = myConfig.get()->targetTemp[1];
     root["tconf"] = myConfig.get()->targetTemp[2];
@@ -62,7 +62,26 @@ void handleLoadData(){
     root["password"] = myConfig.get()->mqtt_password;
     root["tprefix"] = myConfig.get()->mqtt_topic_prefix;
 
+    String json="";
+    serializeJson(root,json);
+    #ifdef DEBUG_WEBSERVER
+      debugV("Response: %s",json.c_str());
+    #endif
+    server.send(200,"application/json",json.c_str());
+}
 
+void handleLoadProgramData(){
+
+    DynamicJsonDocument root(11165);
+    JsonArray weekPrograms = root.createNestedArray("wprg");
+    for(u8_t d=0; d<7; d++){
+        JsonObject weekProgram = weekPrograms.createNestedObject();
+        weekProgram["day"] = d;
+        JsonArray program = weekProgram.createNestedArray("prg");
+        for(u8_t h=0; h < (24*4); h++){
+          program.add(myConfig.get()->weekProgram[d].hourQuarterHolds[h]);
+        }
+    }
 
     String json="";
     serializeJson(root,json);
@@ -78,11 +97,6 @@ void handleSaveData(){
         for(int i=0; i< server.args(); i++){
             debugV("%s=%s",server.argName(i).c_str(), server.arg(i).c_str());
         }
-//        if(server.hasArg("teco")){
-//            debugV("Ricevuto teco=%s",server.arg("nname").c_str());
-//        } else {
-//            displayError("Invalid POST. No param!");
-//        }
         myConfig.get()->targetTemp[0] = server.arg("teco").toFloat();
         myConfig.get()->targetTemp[1] = server.arg("tnorm").toFloat();
         myConfig.get()->targetTemp[2] = server.arg("tconf").toFloat();
@@ -104,6 +118,31 @@ void handleSaveData(){
 
         server.send(204,"");
 
+}
+
+void handleSaveProgramData(){
+        debugV("Ricevuta chiamata di Save Program!");
+        debugV("Ricevuti %d parametri",server.args());
+        for(int i=0; i< server.args(); i++){
+            if(server.argName(i).startsWith("plain"))continue;
+            debugV("%s=%s",server.argName(i).c_str(), server.arg(i).c_str());
+            u8_t day = atoi(&server.argName(i).c_str()[4]);
+            debugV("Working on day %d '%s'",day,server.arg(i).c_str());
+            StaticJsonDocument<1536> doc;
+            DeserializationError err = deserializeJson(doc, server.arg(i).c_str());
+            if (err) {
+              debugV("deserializeJson() failed with code: %s ",err.c_str());
+              server.send(500,err.c_str());
+            } else {
+              for(u8_t hq=0; hq < 24*4; hq++){
+                debugV("day:%d hq:%d = %d",day,hq,doc[hq].as<u8_t>());
+                myConfig.get()->weekProgram[day].hourQuarterHolds[hq]=doc[hq].as<u8_t>();
+              }
+            }
+        }
+        myConfig.saveConfig();
+
+        server.send(204,"");
 }
 
 String indexKeyProcessor(const String& key)
@@ -146,6 +185,8 @@ void setupWebServer(){
 
     server.on("/load",HTTP_GET, handleLoadData);
     server.on("/save",HTTP_POST, handleSaveData);
+    server.on("/loadP",HTTP_GET, handleLoadProgramData);
+    server.on("/saveP",HTTP_POST, handleSaveProgramData);
 
     server.onNotFound([]() {                              // If the client requests any URI
         if (!handleFileRead(server.uri()))                  // send it if it exists
