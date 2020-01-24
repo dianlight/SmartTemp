@@ -32,8 +32,6 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* c
 #define fontY 10
 #define offsetX 0
 #define offsetY 0
-#define U8_Width 128
-#define U8_Height 64
 #define USE_HWI2C
 
 
@@ -406,4 +404,10 @@ void displayProgress(u8 perc,String type)
       u8g2.setDrawColor(2);
       u8g2.drawRBox(7,15,perc+14,14,3);
   } while ( u8g2.nextPage() );    
+}
+
+u8g2_Bitmap _buffer;
+
+void screeshot(Print &p){
+ u8g2.writeBufferPBM(p);
 }

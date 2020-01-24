@@ -4,7 +4,7 @@ import "./holds.css"
 import "./favicon.ico"
 
 import "chibijs"
-import populate from "populate.js";
+import populate from "populate.js"
 
 const CPROG = ['eco','normal','confort'];
 
@@ -75,9 +75,30 @@ function show(what){
 }
 window.show = show;
 
+function refreshDisplay(){
+  $().ajax("screen","GET",function(data,status){
+//    console.log(status,data);
+    let rows = data.split("\n");
+    let ctx = $("#screen")[0].getContext('2d');
+    ctx.fillStyle = 'rgb(0, 0, 0)';
+    for(let y=0; y < 64; y++){
+//      console.log(rows[y+3]);
+      for(let x=0; x< 128; x++){
+        if(rows[y+3][x] === '1')ctx.fillStyle = 'rgb(0, 0, 0)';
+        else ctx.fillStyle = 'rgb(255, 255, 255)';
+        ctx.fillRect(x,y,1,1);
+      }
+    }
+    setTimeout(refreshDisplay,500);
+  });
+
+}
+
+
 $().ready(function(){
 
   // Home
+  setTimeout(refreshDisplay,500);
 
   // Program
   reloadProgram();

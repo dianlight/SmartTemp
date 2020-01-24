@@ -51,3 +51,10 @@
                                     supported by Chrome, Opera and Firefox */
 }
 
+.mirror {
+    height: 100%;
+    width: 100%;
+    max-width: 390px;
+    max-height: 195px;
+}
+

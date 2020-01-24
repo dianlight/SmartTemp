@@ -15,17 +15,26 @@
 
     <div id="home" class="panel container">
         <div class="row">
-            <div class="card">
-                <div class="section dark">
-                    <h3>Current Temperature</h3>
+            <div class="col-sm-12 col-md-4 col-lg-3">
+                <div class="card fluid">
+                    <canvas id="screen" height="64" width="128" class="mirror"></canvas>
                 </div>
-                <div class="section">
-                    <div class="row">
-                        <div class="col-sm"></div>
-                        <div class="col-sm">
-                            <h1 id="temp1">20.0&deg;C</h1>
+            </div>
+            <div class="col-sm col-md-4 col-lg-3">
+                <div class="card fluid">
+                    <div class="section dark">
+                        <h4>Controls</h4>
+                    </div>
+                    <div class="section">
+                        <div class="button-group">
+                            <button class="primary small">&orarr;</button>
+                            <button class="primary small">&olarr;</button>
                         </div>
-                        <div class="col-sm"></div>
+                        <div class="button-group">
+                            <button class="secondary small">&DownArrow;</button>
+                            <button class="tertiary small">&Darr;</button>
+                            <button class="inverse small">&DownTeeArrow;</button>
+                        </div>
                     </div>
                 </div>
             </div>

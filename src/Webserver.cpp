@@ -42,6 +42,16 @@ String getContentType(String filename){
   return "text/plain";
 }
 
+void handleDisplayData() {
+  WiFiClient p = server.client();
+  p.write("HTTP/1.1 200 OK\n");
+  p.write("Content-Type: image/x‑portable‑bitmap\n");
+//  p.write("Content-Length: \n");
+  p.write("Connection: close\n\n");
+  screeshot(p);
+  p.write("\n\n");
+}
+
 void handleLoadData(){
 
     StaticJsonDocument<1024> root;
@@ -187,6 +197,7 @@ void setupWebServer(){
     server.on("/save",HTTP_POST, handleSaveData);
     server.on("/loadP",HTTP_GET, handleLoadProgramData);
     server.on("/saveP",HTTP_POST, handleSaveProgramData);
+    server.on("/screen",HTTP_GET, handleDisplayData);
 
     server.onNotFound([]() {                              // If the client requests any URI
         if (!handleFileRead(server.uri()))                  // send it if it exists
