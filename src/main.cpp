@@ -46,7 +46,6 @@ void onStationModeGotIP(const WiFiEventStationModeGotIP& evt) {
 
     bootConnectedDisplay();
 
-//    timeClient.begin();
     setupNTP();
 
     setupOTA();
@@ -134,32 +133,6 @@ void setup()
   setupWifi(at8gw.getEncoderButton() == 3); // Pressed
 
   delay(500);
-  /*
-  setDebug(INFO);
-  if(WiFi.status() == WL_CONNECTED){
-    displayError("Sync Time... (Max 30sec)");
-    waitForSync(30);
-
-    Serial.println();
-    Serial.println("UTC:             " + UTC.dateTime());
-
-        // See if local time can be obtained (does not work in countries that span multiple timezones)
-    Serial.print(F("Local (GeoIP):   "));
-    if (myTZ.setLocation() && errorString() != "OK") {
-      Serial.println(myTZ.dateTime());
-    } else {
-      Serial.println(errorString());
-      // Provide official timezone names
-      // https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-      myTZ.setLocation(F("Europe/Rome"));
-      Serial.print(F("Italy:     "));
-      Serial.println(myTZ.dateTime());
-      myTZ.setDefault();
-    }
-  }
-  */
-
-
 }   
 
 unsigned long checkLastTime, switchLastTime, manualTime;
@@ -199,7 +172,10 @@ void loop()
             at8gw.setRelay(heating);
           #endif
         }
-        if (WiFi.status() == WL_CONNECTED) sendMQTTState();
+        if (WiFi.status() == WL_CONNECTED){
+          sendMQTTAvail(true);
+          sendMQTTState();
+        } 
         checkLastTime = millis();
     }
     at8gw.i2cReader();

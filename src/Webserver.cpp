@@ -23,7 +23,7 @@ extern Config myConfig;
  * 
  */
 
-ESP8266WebServer server(8080);
+ESP8266WebServer server(80);
 EspHtmlTemplateProcessor templateProcessor(&server);
 
 String getContentType(String filename){
@@ -189,7 +189,7 @@ bool handleFileRead(String path){  // send the right file to the client (if it e
 
 void setupWebServer(){
 
-    MDNS.addService("http", "tcp", 8080);   // Web server
+    MDNS.addService("http", "tcp", 80);   // Web server
 
     SPIFFS.begin();                           // Start the SPI Flash Files System
 
@@ -206,6 +206,11 @@ void setupWebServer(){
 
     server.begin();                           // Actually start the server
     debugV("HTTP server started");
+}
+
+void stopWebServer(){
+    server.stop();
+    SPIFFS.end();
 }
 
 
