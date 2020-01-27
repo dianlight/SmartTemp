@@ -36,17 +36,10 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* c
 
 
 extern PubSubClient client;
-//extern Timezone myTZ;
-// Base structure data:
 extern bool heating;
 extern float curTemp;
 extern float curHumidity;
-
 #define MAX_DEPTH 2
-
-#ifdef DEBUG_SERIAL_MENU
-  serialIn serial(Serial);
-#endif
 
 extern AT8I2CGATEWAY at8gw;
 
@@ -56,25 +49,24 @@ Ticker sleepModeTicker;
 static time_t lastAction;
 static bool psMode = false;
 
-void sleepModeDislay(){
-  if(millis() - lastAction > myConfig.get() -> displayPowerOff * 1000 && !myConfig.getMode()->active){
-    u8g2.setPowerSave(1);
-    #ifdef DEBUG_REMOTE
-      debugV("PowerOff Display");
-    #endif
-    psMode=true;
-  } else if(millis() - lastAction > myConfig.get() -> displaySleep * 1000 && !myConfig.getMode()->active){
-    uint8_t ctn = map((millis() - lastAction)/1000,myConfig.get() -> displaySleep,myConfig.get() -> displayPowerOff,myConfig.get() -> displayContrast/2,0);
-    u8g2.setContrast(ctn);
-    #ifdef DEBUG_REMOTE
-      debugV("Display Power %d",ctn);
-    #endif
-    psMode=true;
-  } else {
-    psMode=false;
+  void sleepModeDislay(){
+    if(millis() - lastAction > myConfig.get() -> displayPowerOff * 1000 && !myConfig.getMode()->active){
+      u8g2.setPowerSave(1);
+      #ifdef DEBUG_REMOTE
+        debugV("PowerOff Display");
+      #endif
+      psMode=true;
+    } else if(millis() - lastAction > myConfig.get() -> displaySleep * 1000 && !myConfig.getMode()->active){
+      uint8_t ctn = map((millis() - lastAction)/1000,myConfig.get() -> displaySleep,myConfig.get() -> displayPowerOff,myConfig.get() -> displayContrast/2,0);
+      u8g2.setContrast(ctn);
+      #ifdef DEBUG_REMOTE
+        debugV("Display Power %d",ctn);
+      #endif
+      psMode=true;
+    } else {
+      psMode=false;
+    }
   }
-
-}
 
 void setupDisplay() {
       u8g2.begin();
@@ -87,10 +79,6 @@ void setupDisplay() {
       do {
           u8g2.drawUTF8(0,16,"Please wait...");
       } while ( u8g2.nextPage() );   
-
-      #ifdef DEBUG_SERIAL_MENU 
-        Serial.println("Use keys + - * /");
-      #endif 
 }
 
 
@@ -295,7 +283,7 @@ void loopDisplay() {
             break;
           case Config::CONFIG_TARGET::INFO:
             u8g2.setFont(fontName);
-            u8g2.drawUTF8(0,26,"Version:" SMT_VERSION "." CONFIG_VERSION);
+            u8g2.drawUTF8(0,26,"Version:" _SMT_VERSION "." CONFIG_VERSION);
 //            u8g2.drawUTF8(0,36,String(String("IP:")+WiFi.localIP().toString()).c_str());
             break;
           case Config::CONFIG_TARGET::WIFI:
@@ -406,8 +394,53 @@ void displayProgress(u8 perc,String type)
   } while ( u8g2.nextPage() );    
 }
 
-u8g2_Bitmap _buffer;
+//u8g2_Bitmap _buffer;
+static Print *u8g2_print_for_screenshot;
+
+void u8g2_print_callback(const char *s)
+{ 
+  u8g2_print_for_screenshot->print(s); 
+}
 
 void screeshot(Print &p){
- u8g2.writeBufferPBM(p);
+  u8g2_print_for_screenshot = &p;
+  u8g2_WriteBufferPBM(u8g2.getU8g2(), u8g2_print_callback);
+}
+
+static u8_t u8g2_print_for_screenshot_row,u8g2_print_for_screenshot_bit;
+
+void u8g2_print_bmp_callback(const char *s)
+{ 
+  static byte current = 0x00;
+
+  for(u8_t bp=0; bp < strlen(s);bp++){
+    if(u8g2_print_for_screenshot_row == 0 && s[bp] == '1'){
+      u8g2_print_for_screenshot->print("4"); // Change from P1 to P4 format (Binary)
+    } else if(u8g2_print_for_screenshot_row == 2 && s[bp] == 0x0A){
+      u8g2_print_for_screenshot->print(" "); // Space as separator as BPM P4 Spec 
+      u8g2_print_for_screenshot_row++;
+    } else if(u8g2_print_for_screenshot_row < 3 ){
+      u8g2_print_for_screenshot->print(s[bp]);
+    } else if(s[bp] != 0x0A){
+      if(s[bp] == '0'){
+        current = (current & ~(0x01 << (7-u8g2_print_for_screenshot_bit))) & 0xFF;
+      } else { 
+        current = (current | (0x01 << (7-u8g2_print_for_screenshot_bit))) & 0xFF;
+      }
+      u8g2_print_for_screenshot_bit++;
+      if(u8g2_print_for_screenshot_bit == 8){
+        u8g2_print_for_screenshot_bit=0;
+        u8g2_print_for_screenshot->printf("%c",current); 
+        current = 0x00;
+      }
+    }
+    if(s[bp] == 0x0A)u8g2_print_for_screenshot_row++;
+  }
+}
+
+void screeshotbmp(Print &p){
+  u8g2_print_for_screenshot = &p;
+  u8g2_print_for_screenshot_row = 0;
+  u8g2_print_for_screenshot_bit = 0;
+  u8g2_WriteBufferPBM(u8g2.getU8g2(), u8g2_print_bmp_callback);
 }

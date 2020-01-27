@@ -12,7 +12,6 @@
 #include "Config.h"
 extern Config myConfig;
 
-
 //callback notifying us of the need to save config
 void saveConfigCallback () {
   #ifdef DEBUG_EVENT
@@ -111,7 +110,7 @@ void setupWifi(bool captiveConfig) {
     strcpy(myConfig.get()->mqtt_user,custom_mqtt_user.getValue());
     strcpy(myConfig.get()->mqtt_password,custom_mqtt_password.getValue());
     strcpy(myConfig.get()->mqtt_topic_prefix,custom_mqtt_topic_prefix.getValue());
-
+  
     myConfig.saveConfig();
 
   }

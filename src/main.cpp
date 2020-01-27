@@ -13,21 +13,14 @@
 #include "Network.h"
 #include "Display.h"
 #include "OTA.h"
-#include "MyMQTT.h"
-//#include <ezTime.h>
-//#include <NTPClient.h>
-#include "MyTimeNTP.h"
 #include "at8i2cGateway.h"
+#include "MyMQTT.h"
+#include "MyTimeNTP.h"
 #include "I2CDebug.h"
 #include "Thermostat.h"
 #include "Webserver.h"
-
-
-//WiFiUDP ntpUDP;
-//Timezone myTZ;
-//NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 3600, 60000);
-
 Config myConfig;
+
 AT8I2CGATEWAY at8gw(AT8_I2C_GW);
 
 #ifdef DEBUG_REMOTE
@@ -117,7 +110,6 @@ void setup()
 
   myConfig = Config();
 
-
   setupDisplay();
 
   stationConnectedHandler = WiFi.onStationModeGotIP(&onStationModeGotIP);
@@ -140,63 +132,58 @@ unsigned long checkLastTime, switchLastTime, manualTime;
 
 void loop()
 {
-  
   loopDisplay();
   if(!loopOTA()){
+      if(millis() - checkLastTime > 5000){
+          // Automation
+          if(myConfig.get()->returnAutoTimeout > 0 
+                && !myConfig.get()->away 
+                && myConfig.get()->hold == Config::MODES::MANUAL 
+                && millis() - manualTime > myConfig.get()->returnAutoTimeout * 1000){
+            myConfig.get()->hold = Config::MODES::AUTO;
+          }
 
-    if(millis() - checkLastTime > 5000){
-        // Automation
-        if(myConfig.get()->returnAutoTimeout > 0 
-              && !myConfig.get()->away 
-              && myConfig.get()->hold == Config::MODES::MANUAL 
-              && millis() - manualTime > myConfig.get()->returnAutoTimeout * 1000){
-          myConfig.get()->hold = Config::MODES::AUTO;
-        }
+          // Relay Control      
+          if(curTemp - myConfig.get()->tempPrecision < TARGET_TEMP && millis() - switchLastTime > myConfig.get()->minSwitchTime * 1000){
+            #ifdef DEBUG_EVENT
+              Serial.printf("Relay On %f < %f",curTemp - myConfig.get()->tempPrecision,TARGET_TEMP);
+            #endif
+            at8gw.setRelay(true);
+            switchLastTime = millis();
+          } else if(curTemp + myConfig.get()->tempPrecision > TARGET_TEMP && millis() - switchLastTime > myConfig.get()->minSwitchTime * 1000) {
+            #ifdef DEBUG_EVENT
+              Serial.printf("Relay Off %f > %f",curTemp - myConfig.get()->tempPrecision,TARGET_TEMP);
+            #endif
+            at8gw.setRelay(false);
+            switchLastTime = millis();
+          } else {
+            #ifdef DEBUG_EVENT
+              Serial.printf("Const Relay %s\n",heating?"On":"Off");
+              at8gw.setRelay(heating);
+            #endif
+          }
+          if (WiFi.status() == WL_CONNECTED){
+            sendMQTTAvail(true);
+            sendMQTTState();
+          } 
+          checkLastTime = millis();
+      }
+      at8gw.i2cReader();
+      curHumidity = at8gw.getHumidity();
+      curTemp = at8gw.getTemperature() + FIXED_TEMP_CORRECTION;
+      heating = at8gw.getRelay();
 
-        // Relay Control      
-        if(curTemp - myConfig.get()->tempPrecision < TARGET_TEMP && millis() - switchLastTime > myConfig.get()->minSwitchTime * 1000){
-          #ifdef DEBUG_EVENT
-            Serial.printf("Relay On %f < %f",curTemp - myConfig.get()->tempPrecision,TARGET_TEMP);
+      if (WiFi.status() == WL_CONNECTED){
+          networkLoop();
+          loopMQTT();
+          loopWebServer();
+          loopNTP();
+
+          #ifdef DEBUG_REMOTE
+            // RemoteDebug handle (for WiFi connections)
+            Debug.handle();
           #endif
-          at8gw.setRelay(true);
-          switchLastTime = millis();
-        } else if(curTemp + myConfig.get()->tempPrecision > TARGET_TEMP && millis() - switchLastTime > myConfig.get()->minSwitchTime * 1000) {
-          #ifdef DEBUG_EVENT
-            Serial.printf("Relay Off %f > %f",curTemp - myConfig.get()->tempPrecision,TARGET_TEMP);
-          #endif
-          at8gw.setRelay(false);
-          switchLastTime = millis();
-        } else {
-          #ifdef DEBUG_EVENT
-            Serial.printf("Const Relay %s\n",heating?"On":"Off");
-            at8gw.setRelay(heating);
-          #endif
-        }
-        if (WiFi.status() == WL_CONNECTED){
-          sendMQTTAvail(true);
-          sendMQTTState();
-        } 
-        checkLastTime = millis();
-    }
-    at8gw.i2cReader();
-    curHumidity = at8gw.getHumidity();
-    curTemp = at8gw.getTemperature() + FIXED_TEMP_CORRECTION;
-    heating = at8gw.getRelay();
-
-    if (WiFi.status() == WL_CONNECTED){
-        networkLoop();
-        loopMQTT();
-        loopWebServer();
-//        timeClient.update();
-        loopNTP();
-
-        #ifdef DEBUG_REMOTE
-          // RemoteDebug handle (for WiFi connections)
-
-          Debug.handle();
-        #endif
-    }
+      }
   }
-
 }
 

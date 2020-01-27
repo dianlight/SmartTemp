@@ -1,20 +1,19 @@
 #pragma once
 
+#define STRINGIFY(x) #x
 #ifndef SMT_VERSION
-    #define SMT_VERSION NdN
+    #define _SMT_VERSION ""
+#else
+    #define _SMT_VERSION STRINGIFY(SMT_VERSION)   
 #endif
-
-// ArduinoJson Size: 5=459124 6=460132 6opt=460116
-
 
 #define DEBUG_REMOTE
 //#define DEBUG_I2C_SCAN
 //#define DEBUG_I2C_IN
 //#define DEBUG_I2C_OUT
 #define DEBUG_MQTT
-#define DEBUG_EVENT
+//#define DEBUG_EVENT
 #define DEBUG_WEBSERVER
-//#define DEBUG_SERIAL_MENU
 
 #include <time.h>
 #include <TZ.h>
@@ -41,6 +40,7 @@
 
 
 #include "Constants.h"
+
 
 class Config {
     public:
@@ -162,4 +162,10 @@ class Config {
         StoreStruct *get();
         ConfigModeStruct *getMode();
 };
+
+#ifndef DEBUG_REMOTE
+    #define debugV Serial.printf
+    #define debugW Serial.printf
+    #define debugE Serial.printf
+#endif
 

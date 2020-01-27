@@ -1,11 +1,14 @@
-#include <ESP8266WebServer.h>
 #include <DNSServer.h>
 #include <ESP8266mDNS.h>
-#include <FS.h>
+//#include <FS.h>
 #include <ArduinoJson.h>
 #include <strings.h>
+#include <U8g2lib.h>
 #include "Display.h"
-#include <EspHtmlTemplateProcessor.h>
+#include <LoopbackStream.h>
+#include <AsyncJson.h>
+
+#include "web_static/web_server_static_files.h"
 
 #include "Config.h"
 extern Config myConfig;
@@ -23,36 +26,32 @@ extern Config myConfig;
  * 
  */
 
-ESP8266WebServer server(80);
-EspHtmlTemplateProcessor templateProcessor(&server);
+#include <ESPAsyncWebServer.h>
 
-String getContentType(String filename){
-  if(filename.endsWith(".htm")) return "text/html";
-  else if(filename.endsWith(".html")) return "text/html";
-  else if(filename.endsWith(".css")) return "text/css";
-  else if(filename.endsWith(".js")) return "application/javascript";
-  else if(filename.endsWith(".png")) return "image/png";
-  else if(filename.endsWith(".gif")) return "image/gif";
-  else if(filename.endsWith(".jpg")) return "image/jpeg";
-  else if(filename.endsWith(".ico")) return "image/x-icon";
-  else if(filename.endsWith(".xml")) return "text/xml";
-  else if(filename.endsWith(".pdf")) return "application/x-pdf";
-  else if(filename.endsWith(".zip")) return "application/x-zip";
-  else if(filename.endsWith(".gz")) return "application/x-gzip";
-  return "text/plain";
+// SKETCH BEGIN
+AsyncWebServer server(80);
+//AsyncWebSocket ws("/ws");
+//AsyncEventSource events("/events");
+
+//ESP8266WebServer server(80);
+//EspHtmlTemplateProcessor templateProcessor(&server);
+
+//LoopbackStream _buffer(9*1024);
+
+void handleDisplayData(AsyncWebServerRequest *request) {
+  AsyncResponseStream *response = request->beginResponseStream("image/x‑portable‑bitmap",10240U);
+  screeshot(*response);
+  request->send(response);
 }
 
-void handleDisplayData() {
-  WiFiClient p = server.client();
-  p.write("HTTP/1.1 200 OK\n");
-  p.write("Content-Type: image/x‑portable‑bitmap\n");
-//  p.write("Content-Length: \n");
-  p.write("Connection: close\n\n");
-  screeshot(p);
-  p.write("\n\n");
+void handleDisplayBmpData(AsyncWebServerRequest *request) {
+  AsyncResponseStream *response = request->beginResponseStream("image/x‑portable‑bitmap");
+  response->addHeader("Content-Disposition","attachment; filename=\"screen.pbm\"");
+  screeshotbmp(*response);
+  request->send(response);
 }
 
-void handleLoadData(){
+void handleLoadData(AsyncWebServerRequest *request){
 
     StaticJsonDocument<1024> root;
     root["teco"] = myConfig.get()->targetTemp[0];
@@ -72,77 +71,64 @@ void handleLoadData(){
     root["password"] = myConfig.get()->mqtt_password;
     root["tprefix"] = myConfig.get()->mqtt_topic_prefix;
 
-    String json="";
-    serializeJson(root,json);
-    #ifdef DEBUG_WEBSERVER
-      debugV("Response: %s",json.c_str());
-    #endif
-    server.send(200,"application/json",json.c_str());
+    AsyncResponseStream *response = request->beginResponseStream("application/json");
+    serializeJson(root,*response);
+    request->send(response);
 }
 
-void handleLoadProgramData(){
-
-    DynamicJsonDocument root(11165);
-    JsonArray weekPrograms = root.createNestedArray("wprg");
-    for(u8_t d=0; d<7; d++){
-        JsonObject weekProgram = weekPrograms.createNestedObject();
-        weekProgram["day"] = d;
-        JsonArray program = weekProgram.createNestedArray("prg");
-        for(u8_t h=0; h < (24*4); h++){
-          program.add(myConfig.get()->weekProgram[d].hourQuarterHolds[h]);
-        }
-    }
-
-    String json="";
-    serializeJson(root,json);
-    #ifdef DEBUG_WEBSERVER
-      debugV("Response: %s",json.c_str());
-    #endif
-    server.send(200,"application/json",json.c_str());
+void handleLoadProgramData(AsyncWebServerRequest *request){
+  AsyncJsonResponse *response = new AsyncJsonResponse(true);
+  JsonArray program = response->getRoot();
+  AsyncWebParameter* day = request->getParam("day");
+  for(u8_t h=0; h < (24*4); h++){
+    program.add(myConfig.get()->weekProgram[day->value().toInt()].hourQuarterHolds[h]);
+  }
+  response->setLength();
+  request->send(response);
 }
 
-void handleSaveData(){
+void handleSaveData(AsyncWebServerRequest *request){
         debugV("Ricevuta chiamata di Save!");
-        debugV("Ricevuti %d parametri",server.args());
-        for(int i=0; i< server.args(); i++){
-            debugV("%s=%s",server.argName(i).c_str(), server.arg(i).c_str());
+        debugV("Ricevuti %d parametri",request->args());
+        for(size_t i=0; i< request->args(); i++){
+            debugV("%s=%s",request->argName(i).c_str(), request->arg(i).c_str());
         }
-        myConfig.get()->targetTemp[0] = server.arg("teco").toFloat();
-        myConfig.get()->targetTemp[1] = server.arg("tnorm").toFloat();
-        myConfig.get()->targetTemp[2] = server.arg("tconf").toFloat();
-        myConfig.get()->returnAutoTimeout = server.arg("aautotimeout").toInt();
-        myConfig.get()->displaySleep = server.arg("dsleep").toInt();
-        myConfig.get()->displayPowerOff = server.arg("doff").toInt();
-        myConfig.get()->awayModify = server.arg("tadelta").toFloat();
-        myConfig.get()->awayMode = server.arg("tamode").toFloat();
-        myConfig.get()->tempPrecision = server.arg("tprec").toFloat();
-        myConfig.get()->minSwitchTime = server.arg("sres").toFloat();
-        strcpy(myConfig.get()->mqtt_client_id,server.arg("nname").c_str());
-        strcpy(myConfig.get()->mqtt_server,server.arg("saddress").c_str());
-        strcpy(myConfig.get()->mqtt_port,server.arg("port").c_str());
-        strcpy(myConfig.get()->mqtt_user,server.arg("user").c_str());
-        strcpy(myConfig.get()->mqtt_password,server.arg("password").c_str());
-        strcpy(myConfig.get()->mqtt_topic_prefix,server.arg("tprefix").c_str());
+        myConfig.get()->targetTemp[0] = request->arg("teco").toFloat();
+        myConfig.get()->targetTemp[1] = request->arg("tnorm").toFloat();
+        myConfig.get()->targetTemp[2] = request->arg("tconf").toFloat();
+        myConfig.get()->returnAutoTimeout = request->arg("aautotimeout").toInt();
+        myConfig.get()->displaySleep = request->arg("dsleep").toInt();
+        myConfig.get()->displayPowerOff = request->arg("doff").toInt();
+        myConfig.get()->awayModify = request->arg("tadelta").toFloat();
+        myConfig.get()->awayMode = request->arg("tamode").toFloat();
+        myConfig.get()->tempPrecision = request->arg("tprec").toFloat();
+        myConfig.get()->minSwitchTime = request->arg("sres").toFloat();
+        strcpy(myConfig.get()->mqtt_client_id,request->arg("nname").c_str());
+        strcpy(myConfig.get()->mqtt_server,request->arg("saddress").c_str());
+        strcpy(myConfig.get()->mqtt_port,request->arg("port").c_str());
+        strcpy(myConfig.get()->mqtt_user,request->arg("user").c_str());
+        strcpy(myConfig.get()->mqtt_password,request->arg("password").c_str());
+        strcpy(myConfig.get()->mqtt_topic_prefix,request->arg("tprefix").c_str());
 
         myConfig.saveConfig();
 
-        server.send(204,"");
+        request->send(204);
 
 }
 
-void handleSaveProgramData(){
+void handleSaveProgramData(AsyncWebServerRequest *request){
         debugV("Ricevuta chiamata di Save Program!");
-        debugV("Ricevuti %d parametri",server.args());
-        for(int i=0; i< server.args(); i++){
-            if(server.argName(i).startsWith("plain"))continue;
-            debugV("%s=%s",server.argName(i).c_str(), server.arg(i).c_str());
-            u8_t day = atoi(&server.argName(i).c_str()[4]);
-            debugV("Working on day %d '%s'",day,server.arg(i).c_str());
+        debugV("Ricevuti %d parametri",request->args());
+        for(size_t i=0; i< request->args(); i++){
+            if(request->argName(i).startsWith("plain"))continue;
+            debugV("%s=%s",request->argName(i).c_str(), request->arg(i).c_str());
+            u8_t day = atoi(&request->argName(i).c_str()[4]);
+            debugV("Working on day %d '%s'",day,request->arg(i).c_str());
             StaticJsonDocument<1536> doc;
-            DeserializationError err = deserializeJson(doc, server.arg(i).c_str());
+            DeserializationError err = deserializeJson(doc, request->arg(i).c_str());
             if (err) {
               debugV("deserializeJson() failed with code: %s ",err.c_str());
-              server.send(500,err.c_str());
+              request->send(500,err.c_str());
             } else {
               for(u8_t hq=0; hq < 24*4; hq++){
                 debugV("day:%d hq:%d = %d",day,hq,doc[hq].as<u8_t>());
@@ -152,36 +138,31 @@ void handleSaveProgramData(){
         }
         myConfig.saveConfig();
 
-        server.send(204,"");
+        request->send(204);
 }
 
-String indexKeyProcessor(const String& key)
-{
-  if (key == "VERSION") return SMT_VERSION "." CONFIG_VERSION;
-  else if (key == "CURRENT_MODE") return CURRENT_MODE_STR;
-  else if (key == "COPYRIGHT") return COPYRIGHT;
+//String indexKeyProcessor(const String& key)
+//{
+//  if (key == "VERSION") return _SMT_VERSION "." CONFIG_VERSION;
+//  else if (key == "CURRENT_MODE") return CURRENT_MODE_STR;
+//  else if (key == "COPYRIGHT") return COPYRIGHT;
+//
+//  return "&#x1F534;" + key + "&#x1F534;";
+//}
 
-  return "&#x1F534;" + key + "&#x1F534;";
-}
-
-bool handleFileRead(String path){  // send the right file to the client (if it exists)
+bool handleFileRead(AsyncWebServerRequest *request){  // send the right file to the client (if it exists)
+  String path = request->url();
   debugV("handleFileRead: %s",path.c_str());
   if(path.endsWith("/")) path += "index.html";           // If a folder is requested, send the index file
-  String contentType = getContentType(path);             // Get the MIME type
-  String pathWithGz = path + ".gz";
-  if(SPIFFS.exists(pathWithGz) || SPIFFS.exists(path)){  // If the file exists, either as a compressed archive, or normal
-    if(SPIFFS.exists(pathWithGz))                          // If there's a compressed version available
-      path += ".gz";                                         // Use the compressed version
-    if(contentType.equals("text/html") && !SPIFFS.exists(pathWithGz)){  // Do not support tempalte gzip -- for now --
-      templateProcessor.processAndSend(path,indexKeyProcessor);
-    } else {
-      File file = SPIFFS.open(path, "r");                    // Open the file
-      size_t sent = server.streamFile(file, contentType);    // Send it to the client
-      file.close();                                          // Close the file again
-      debugV("Sent file: %s (%d)",path.c_str(),sent);
-    }
-    return true;
+  for(byte i=0; i < STATIC_FILES_SIZE; i++){
+    if(staticFiles[i].filename == path || staticFiles[i].filename == path+".gz"){
+      AsyncWebServerResponse *response = request->beginResponse_P(200, staticFiles[i].mimetype, staticFiles[i].data, staticFiles[i].length);
+      if(staticFiles[i].filename.endsWith(".gz"))response->addHeader("Content-Encoding", "gzip");
+      request->send(response);
+      return true;
+    } 
   }
+
   debugV("File Not Found: %s",path.c_str());
   return false;                                          // If the file doesn't exist, return false
 }
@@ -191,17 +172,22 @@ void setupWebServer(){
 
     MDNS.addService("http", "tcp", 80);   // Web server
 
-    SPIFFS.begin();                           // Start the SPI Flash Files System
+//    SPIFFS.begin();                           // Start the SPI Flash Files System
+
+//    server.serveStatic("/", SPIFFS, "/")
+//      .setDefaultFile("index.html")
+//      .setTemplateProcessor(indexKeyProcessor);
 
     server.on("/load",HTTP_GET, handleLoadData);
     server.on("/save",HTTP_POST, handleSaveData);
     server.on("/loadP",HTTP_GET, handleLoadProgramData);
     server.on("/saveP",HTTP_POST, handleSaveProgramData);
     server.on("/screen",HTTP_GET, handleDisplayData);
-
-    server.onNotFound([]() {                              // If the client requests any URI
-        if (!handleFileRead(server.uri()))                  // send it if it exists
-        server.send(404, "text/plain", "404: Not Found"); // otherwise, respond with a 404 (Not Found) error
+    server.on("/screenpbm",HTTP_GET, handleDisplayBmpData);
+   
+    server.onNotFound([](AsyncWebServerRequest *request) {                              // If the client requests any URI
+        if (!handleFileRead(request))                  // send it if it exists
+        request->send(404, "text/plain", "404: Not Found"); // otherwise, respond with a 404 (Not Found) error
     });
 
     server.begin();                           // Actually start the server
@@ -209,11 +195,10 @@ void setupWebServer(){
 }
 
 void stopWebServer(){
-    server.stop();
-    SPIFFS.end();
+    server.end();
+//    SPIFFS.end();
 }
 
 
 void loopWebServer(){
-    server.handleClient();
 }

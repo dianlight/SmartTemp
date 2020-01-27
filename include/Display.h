@@ -1,4 +1,5 @@
 #pragma once
+#include <Stream.h>
 
 const static std::string DAYSNAME[] = {
     "Sun",
@@ -26,4 +27,5 @@ void displayError(String Error);
 void displayProgress(u8 perc,String type);
 
 void screeshot(Print &p);
+void screeshotbmp(Print &p);
 

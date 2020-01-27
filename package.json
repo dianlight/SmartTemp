@@ -10,9 +10,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start:dev": "webpack-dev-server  --mode=development",
-    "compile": "rimraf data && webpack --mode=production",
+    "compile": "webpack --mode=production",
     "postinstall": "npm run compile",
-    "clean": "rimraf data node_modules"
+    "clean": "rimraf data",
+    "cleanall": "rimraf data node_modules"
   },
   "repository": {
     "type": "git",
