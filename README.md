@@ -124,7 +124,7 @@ For a detailed list of components refer to the documentation (BOM)
 8. 5v power source ( I used an Hi-Link 220v to 5v but you can use alse batteries )
 9. Wires and Connectors 
 
-### Environmen Prerequisites
+### Environment Prerequisites
 
 1. Platform IO ( to compile and generate the firmware )
 2. An HomeAssistant installation ( used as Smart Controller ) ___(Optional)___ 
@@ -151,19 +151,23 @@ git clone https://github.com/dianlight/SmartTemp.git
 ***!Work in progress!***
 
 <!-- FEATURES -->
-## Features
+## Features / Whishlist
 
-* Standalone Thermostat
-  * Current Room Temperature
-  * Current Room Humidity
-* Wifi remote controlled
-  * MQTT transport
-  * HomeAssistant climate compatibility
-  * NTP clock sync (daylight auto switch)
-* Week programming
-* 3 levels of temperatures. (ECO, NORMAL and CONFORT)
-* Away/In_house temp control step
-* Auto, Manual and Off mode
+[x] Standalone Thermostat
+  [x] Current Room Temperature
+  [x] Current Room Humidity
+  [x] 3 levels of temperatures. (ECO, NORMAL and CONFORT)
+  [x] Week programming
+[x] Advanced Thermostat
+  [x] Away/In_house temp control step
+  [x] Auto, Manual and Off mode
+[x] Smart Thermostat (Wifi remote controlled)
+  [x] MQTT transport
+  [x] HomeAssistant climate compatibility (via MQTT integration)
+    [ ] Homeassistant room presence integration ( auto AWAY/NORMAL mode )
+  [x] NTP clock sync (daylight auto switch)
+[x] WebInterface
+  [ ] Mobile WebApp
 
 
 ***!Work in progress!***
