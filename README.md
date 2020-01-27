@@ -124,7 +124,7 @@ For a detailed list of components refer to the documentation (BOM)
 8. 5v power source ( I used an Hi-Link 220v to 5v but you can use alse batteries )
 9. Wires and Connectors 
 
-### Environmen Prerequisites
+### Environment Prerequisites
 
 1. Platform IO ( to compile and generate the firmware )
 2. An HomeAssistant installation ( used as Smart Controller ) ___(Optional)___ 
@@ -167,6 +167,7 @@ git clone https://github.com/dianlight/SmartTemp.git
     [ ] Homeassistant room presence integration ( auto AWAY/NORMAL mode )
   [x] NTP clock sync (daylight auto switch)
 [x] WebInterface
+  [ ] Mobile WebApp
 
 
 ***!Work in progress!***
