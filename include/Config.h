@@ -1,10 +1,11 @@
 #pragma once
 
-#define STRINGIFY(x) #x
+#define STR2(x) #x
+#define STR(x) STR2(x)
 #ifndef SMT_VERSION
     #define _SMT_VERSION ""
 #else
-    #define _SMT_VERSION STRINGIFY(SMT_VERSION)   
+    #define _SMT_VERSION STR(SMT_VERSION)   
 #endif
 
 #define DEBUG_REMOTE
