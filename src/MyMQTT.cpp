@@ -19,7 +19,7 @@ extern unsigned long manualTime;
 
 void callback(char* topic, byte* payload, unsigned int length) {
   #ifdef DEBUG_MQTT 
-    debugV("nMessage arrived [%s] %s",topic,payload);
+    debugV("Message arrived [%s] %s\n",topic,payload);
   #endif 
 
   if(strstr(topic,"targetTempCmd") != NULL){
@@ -53,7 +53,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 bool reconnect() {
     // Loop until we're reconnected
     #ifdef DEBUG_EVENT
-      debugV("Attempting MQTT connection..[%s:%s@%s:%s]",
+      debugV("Attempting MQTT connection..[%s:%s@%s:%s]\n",
       myConfig.get()->mqtt_user,myConfig.get()->mqtt_password,myConfig.get()->mqtt_server,myConfig.get()->mqtt_port);
     #endif
     // Create the client ID
@@ -138,13 +138,13 @@ bool reconnect() {
         json.c_str(), true
       ); 
       if(!c){
-        debugE("Error sending MQTT message Topic --> %s Message --> %s Size --> %d",
+        debugE("Error sending MQTT message \n\t Topic --> %s \n\t Message --> %s \n\t Size --> %d\n",
           (myConfig.get()->mqtt_topic_prefix + topic + String("/config")).c_str(),
           json.c_str(),
           strlen(json.c_str()));
       #ifdef DEBUG_MQTT
         } else {
-          debugV("Config MQTT Send successfull!");
+          debugV("Config MQTT Send successfull!\n");
       #endif
       }
 
@@ -222,11 +222,7 @@ void sendMQTTAvail(bool online) {
         (online?"online":"offline")
       ); 
       if(!c){
-        debugE("\nError sending MQTT Avail message Topic --> %s",(myConfig.get()->mqtt_topic_prefix + topic + String("/available")).c_str());
-      #ifdef DEBUG_MQTT
-        } else {
-          debugV("Available MQTT Send successfull!");
-      #endif
+        debugE("Error sending MQTT Avail message \n\tTopic --> %s",(myConfig.get()->mqtt_topic_prefix + topic + String("/available")).c_str());
       }
 }
 
@@ -248,10 +244,6 @@ void sendMQTTState() {
   // In other case, you can do root.set<long>("time", 1351824120);
   String topic = String("homeassistant/climate/")+ myConfig.get()->mqtt_client_id;
   
-  #ifdef DEBUG_MQTT
-      debugV("Preparing Status Message:");
-  #endif
-
   root["mode"] = CURRENT_MODE_MQTT; // "off" "heat",
   float targetTemp = TARGET_TEMP;
   root["target_temp"] = targetTemp; //TARGET_TEMP;
@@ -262,15 +254,11 @@ void sendMQTTState() {
   root["current_temp"] = round(curTemp*10)/10;
   root["current_action"] = CURRENT_ACTION_MQTT;
 
-  #ifdef DEBUG_MQTT
-    serializeJsonPretty(root,Serial);
-  #endif
-
   String json;
   serializeJson(root,json);
   if(json.compareTo(oldjson) == 0){
      #ifdef DEBUG_MQTT
-      debugV("Skip MQTT status update. Equal JSON");
+      debugV("Skip MQTT status update. Equal JSON\n");
      #endif
      return;
   }
@@ -280,12 +268,12 @@ void sendMQTTState() {
     json.c_str()
   ); 
   if(!c){
-    debugE("\nError sending MQTT message Topic --> %s Message --> %s",
+    debugE("Error sending MQTT message \n\tTopic --> %s \n\tMessage --> %s\n",
       (myConfig.get()->mqtt_topic_prefix + topic + String("/state")).c_str(),
        json.c_str());
     #ifdef DEBUG_MQTT
       } else {
-        debugV("Status MQTT Send successfull!");
+        debugV("Status MQTT Send successfull!\n");
     #endif
   }
 
