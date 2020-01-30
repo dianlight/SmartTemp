@@ -23,11 +23,6 @@ Config myConfig;
 
 AT8I2CGATEWAY at8gw(AT8_I2C_GW);
 
-#ifdef DEBUG_REMOTE
-  #include <RemoteDebug.h>
-  RemoteDebug Debug;
-#endif
-
 // Base structure data:
 bool heating = false;
 float curTemp = 20.4f;
@@ -57,56 +52,6 @@ void setup()
 
   Serial.begin(115200);
   while(!Serial);
-
-
-  #ifdef DEBUG_REMOTE // Only for development
-
-    // Initialize RemoteDebug
-
-    Debug.begin("SmartTemp",Debug.VERBOSE); // Initialize the WiFi server
-
-    //Debug.setPassword("r3m0t0."); // Password for WiFi client connection (telnet or webapp)  ?
-
-    Debug.setResetCmdEnabled(true); // Enable the reset command
-
-    Debug.showProfiler(true); // Profiler (Good to measure times, to optimize codes)
-
-    Debug.showColors(true); // Colors
-
-    // Debug.setSerialEnabled(true); // if you wants serial echo - only recommended if ESP is plugged in USB
-
-    // Project commands
-/*
-    String helpCmd = "bench1 - Benchmark 1\n";
-    helpCmd.concat("bench2 - Benchmark 2");
-
-    Debug.setHelpProjectsCmds(helpCmd);
-    Debug.setCallBackProjectCmds(&processCmdRemoteDebug);
-    */
-
-    // End of setup - show IP
-
-    Serial.println("* Arduino RemoteDebug Library");
-    Serial.println("*");
-    Serial.print("* WiFI connected. IP address: ");
-    Serial.println(WiFi.localIP());
-    Serial.println("*");
-    Serial.println("* Please use the telnet client (telnet for Mac/Unix or putty and others for Windows)");
-    Serial.println("* or the RemoteDebugApp (in browser: http://joaolopesf.net/remotedebugapp)");
-    Serial.println("*");
-    Serial.println("* This sample will send messages of debug in all levels.");
-    Serial.println("*");
-    Serial.println("* Please try change debug level in client (telnet or web app), to see how it works");
-    Serial.println("*");
-
-		debugV("* This is a message of debug level VERBOSE");
-		debugD("* This is a message of debug level DEBUG");
-		debugI("* This is a message of debug level INFO");
-		debugW("* This is a message of debug level WARNING");
-		debugE("* This is a message of debug level ERROR");
-
-  #endif
-
 
   myConfig = Config();
 
@@ -146,19 +91,19 @@ void loop()
           // Relay Control      
           if(curTemp - myConfig.get()->tempPrecision < TARGET_TEMP && millis() - switchLastTime > myConfig.get()->minSwitchTime * 1000){
             #ifdef DEBUG_EVENT
-              Serial.printf("Relay On %f < %f",curTemp - myConfig.get()->tempPrecision,TARGET_TEMP);
+              debugV("Relay On %f < %f",curTemp - myConfig.get()->tempPrecision,TARGET_TEMP);
             #endif
             at8gw.setRelay(true);
             switchLastTime = millis();
           } else if(curTemp + myConfig.get()->tempPrecision > TARGET_TEMP && millis() - switchLastTime > myConfig.get()->minSwitchTime * 1000) {
             #ifdef DEBUG_EVENT
-              Serial.printf("Relay Off %f > %f",curTemp - myConfig.get()->tempPrecision,TARGET_TEMP);
+              debugV("Relay Off %f > %f",curTemp - myConfig.get()->tempPrecision,TARGET_TEMP);
             #endif
             at8gw.setRelay(false);
             switchLastTime = millis();
           } else {
             #ifdef DEBUG_EVENT
-              Serial.printf("Const Relay %s\n",heating?"On":"Off");
+              debugV("Const Relay %s\n",heating?"On":"Off");
               at8gw.setRelay(heating);
             #endif
           }
@@ -178,11 +123,6 @@ void loop()
           loopMQTT();
           loopWebServer();
           loopNTP();
-
-          #ifdef DEBUG_REMOTE
-            // RemoteDebug handle (for WiFi connections)
-            Debug.handle();
-          #endif
       }
   }
 }

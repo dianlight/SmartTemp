@@ -36,12 +36,15 @@
     "style-loader": "^1.1.3",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10",
-    "webpack-dev-server": "^3.10.1"
+    "webpack-dev-server": "^3.10.1",
+    "ws": "^7.2.1"
   },
   "dependencies": {
     "chibijs": "^3.0.9",
     "mini.css": "^3.0.1",
     "path-svg": "^0.2.1",
-    "populate.js": "^1.1.0"
+    "populate.js": "^1.1.0",
+    "xterm": "^4.3.0",
+    "xterm-addon-fit": "^0.3.0"
   }
 }

@@ -1,11 +1,6 @@
 #include <EEPROM.h>
 #include <Arduino.h>
 #include "Config.h"
-#ifdef DEBUG_REMOTE
-  #include <RemoteDebug.h>
-  extern RemoteDebug Debug;
-#endif
-
 
 static Config::StoreStruct storage;
 static Config::ConfigModeStruct configMode;
@@ -20,9 +15,7 @@ Config::Config() {
     for (unsigned int t=0; t<sizeof(Config::StoreStruct); t++){
       *((char*)&storage + t) = EEPROM.read(t);
       if(t ==  sizeof(CONFIG_VERSION)+ sizeof(size_t)-1 && storage.configSize != sizeof(Config::StoreStruct)){
-        #ifdef DEBUG_REMOTE
-          debugE("Illegal Config Size %d != %d!", storage.configSize, sizeof(Config::StoreStruct));
-        #endif
+        debugE("Illegal Config Size %d != %d!", storage.configSize, sizeof(Config::StoreStruct));
         storage.configSize = sizeof(Config::StoreStruct);
         break;
       }

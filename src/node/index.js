@@ -3,6 +3,10 @@ import "mini.css/dist/mini-default.css"
 import "./holds.css"
 import "./favicon.ico"
 
+import "xterm/css/xterm.css"
+import { Terminal } from 'xterm';
+import { FitAddon } from 'xterm-addon-fit';
+
 import "chibijs"
 import populate from "populate.js"
 
@@ -88,6 +92,8 @@ function change(day,hq){
 
 window.change = change;
 
+const term = new Terminal();
+
 function show(what){
   $(".panel").hide();
   $("#saveButtons").hide();
@@ -101,6 +107,9 @@ function show(what){
   } else if(currentPanel == "config"){
     clearTimeout(displayTimeout);
     reload();
+  } else if(currentPanel == "debug"){
+    clearTimeout(displayTimeout);
+    term.scrollToBottom();
   }
   $("#"+what).show();
 }
@@ -177,6 +186,33 @@ function refreshDisplayFromMap(){
 }
 
 $().ready(function(){
+
+  // Debug
+  const fitAddon = new FitAddon();
+  term.loadAddon(fitAddon);
+  term.open($("#terminal")[0]);
+  fitAddon.fit();
+  term.writeln('Console \x1B[1;3;31mconnecting...\x1B[0m');
+
   // StartPage
-  show("home");
+  //show("home");
+  show("debug")
+
+  // WebSockets
+  var debug_service = new WebSocket('ws://'+window.location.host+'/ws');
+  debug_service.onmessage = function(event){
+   // console.log("Messaggio",event);
+    term.writeln(event.data);
+  }
+  debug_service.onopen = function(event){
+   // console.log(event);
+   term.writeln('\x1B[1;3;31mConnected\x1B[0m');
+   debug_service.send("CSL");
+  }
+  debug_service.onclose = function(){
+    term.writeln('\x1B[1;3;31mDisconnected\x1B[0m');
+  }
+  debug_service.onerror = function(){
+    term.writeln('\x1B[1;3;31mError!\x1B[0m');
+  }
 });

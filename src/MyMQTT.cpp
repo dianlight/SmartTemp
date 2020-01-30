@@ -17,11 +17,6 @@ extern bool heating;
 extern float curTemp;
 extern unsigned long manualTime;
 
-#ifdef DEBUG_REMOTE
-  #include <RemoteDebug.h>
-  extern RemoteDebug Debug;
-#endif
-
 void callback(char* topic, byte* payload, unsigned int length) {
   #ifdef DEBUG_MQTT 
     debugV("nMessage arrived [%s] %s",topic,payload);

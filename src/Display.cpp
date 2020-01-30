@@ -8,12 +8,6 @@
 #include "at8i2cGateway.h"  
 #include <Wire.h>
 
-#ifdef DEBUG_REMOTE
-  #include <RemoteDebug.h>
-  extern RemoteDebug Debug;
-#endif
-
-
 #include "MyTimeNTP.h"
 //#include <ezTime.h>
 

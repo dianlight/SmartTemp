@@ -2,6 +2,8 @@
 #include <Wire.h>
 #include "I2CDebug.h"
 
+// FIXME: Migrate do debug* macro
+
 
 void scanI2C(){
   int nDevices = 0;

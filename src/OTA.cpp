@@ -9,6 +9,8 @@
 static bool inOTA = false;
 static String type;
 
+// FIXME: Migrate do debug* macro
+
 
 void setupOTA() {
     // OTA

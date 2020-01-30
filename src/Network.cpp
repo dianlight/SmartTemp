@@ -6,11 +6,14 @@
 
 //needed for library
 #include <DNSServer.h>
-#include <ESP8266WebServer.h>
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
 
+#define NO_EXTERN_AsyncWebSocket   // WiFi manager incompatibility!
 #include "Config.h"
 extern Config myConfig;
+
+// FIXME: Migrate do debug* macro
+
 
 //callback notifying us of the need to save config
 void saveConfigCallback () {

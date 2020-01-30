@@ -9,12 +9,15 @@
 #endif
 
 #define DEBUG_REMOTE
-//#define DEBUG_I2C_SCAN
-//#define DEBUG_I2C_IN
-//#define DEBUG_I2C_OUT
-#define DEBUG_MQTT
-//#define DEBUG_EVENT
-#define DEBUG_WEBSERVER
+//#define DEBUG_SERIAL
+#if defined(DEBUG_REMOTE) || defined(DEBUG_SERIAL)
+    //#define DEBUG_I2C_SCAN
+    //#define DEBUG_I2C_IN
+    //#define DEBUG_I2C_OUT
+    #define DEBUG_MQTT
+    //#define DEBUG_EVENT
+    #define DEBUG_WEBSERVER
+#endif
 
 #include <time.h>
 #include <TZ.h>
@@ -164,9 +167,27 @@ class Config {
         ConfigModeStruct *getMode();
 };
 
-#ifndef DEBUG_REMOTE
+#ifdef DEBUG_REMOTE
+    #ifdef DEBUG_SERIAL
+        #error "DEBUG_SERIAL and DEBUG_REMOTE can't be on the sime time. Choose one"
+    #endif
+    #ifndef NO_EXTERN_AsyncWebSocket
+        #include <ESPAsyncWebServer.h>
+        extern AsyncWebSocket ws;
+    #endif
+    #define debugV ws.printfAll
+    #define debugW ws.printfAll
+    #define debugE ws.printfAll
+#elif DEBUG_SERIAL
+    #ifdef DEBUG_REMOTE
+        #error "DEBUG_SERIAL and DEBUG_REMOTE can't be on the sime time. Choose one"
+    #endif
     #define debugV Serial.printf
     #define debugW Serial.printf
     #define debugE Serial.printf
+#else
+    #define debugV //
+    #define debugW //
+    #define debugE //
 #endif
 

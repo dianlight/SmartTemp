@@ -60,10 +60,28 @@ var config = {
   devServer: {
     contentBase: path.join(__dirname, 'data'),
     compress: true,
+    proxy: {
+      '/ws':{
+        target: 'ws://localhost:9001',
+        ws: true
+      }
+    },
     port: 9000,
     before: function (app, server, compiler) {
       //      var bodyParser = require('body-parser');
       //      app.use(bodyParser.json());
+      // console.log(server);
+      var WebSocketServer = require("ws").Server;
+      var wss = new WebSocketServer({port: 9001});
+      wss.on("connection", function(ws){
+      //  console.log("Connesso WS",ws,ws._socket.server);
+        ws.on('message', function(msg) {
+          console.log("--> %s",msg);
+          ws.send(msg);
+        });
+        ws.send('hello!');
+      });
+
       app.get('/load', function (req, res) {
         res.json({ 
           "teco": 18.5, 
@@ -93,6 +111,7 @@ var config = {
       app.get("/screenpbm", function(req,res){
         res.sendFile(path.join(__dirname, 'test/screenpbm'+(read++ % 2)+'.pbm'));
       });
+      
     }
   }
 };

@@ -2,11 +2,7 @@
 #include <Arduino.h>
 #include "at8i2cGateway.h"
 
-#ifdef DEBUG_REMOTE
-  #include <RemoteDebug.h>
-  extern RemoteDebug Debug;
-#endif
-
+// FIXME: Migrate do debug* macro
 
 AT8I2CGATEWAY::AT8I2CGATEWAY(int i2caddress) {
     Wire.begin();

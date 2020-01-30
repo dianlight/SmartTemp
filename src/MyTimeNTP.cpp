@@ -6,6 +6,7 @@
 #include <PolledTimeout.h>
 #include <coredecls.h>                  // settimeofday_cb()
 
+// FIXME: Migrate do debug* macro
 
 static timeval tv;
 static time_t now;
