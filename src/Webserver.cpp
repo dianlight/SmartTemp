@@ -5,7 +5,7 @@
 #include <strings.h>
 #include <U8g2lib.h>
 #include "Display.h"
-#include <LoopbackStream.h>
+//#include <LoopbackStream.h>
 #include <AsyncJson.h>
 
 #include "web_static/web_server_static_files.h"
@@ -74,7 +74,7 @@ void handleLoadData(AsyncWebServerRequest *request){
 }
 
 void handleLoadProgramData(AsyncWebServerRequest *request){
-  AsyncJsonResponse *response = new AsyncJsonResponse(true);
+  AsyncJsonResponse *response = new AsyncJsonResponse(true,2048U);
   JsonArray program = response->getRoot();
   AsyncWebParameter* day = request->getParam("day");
   for(u8_t h=0; h < (24*4); h++){
