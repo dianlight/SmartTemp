@@ -4,6 +4,7 @@
 #include <Ticker.h>
 #include "Display.h"
 #include "MyMQTT.h"
+#include "Config.h"
 
 
 static bool inOTA = false;
@@ -20,7 +21,7 @@ void setupOTA() {
   ArduinoOTA.setPort(8266);
 
   // Hostname defaults to esp8266-[ChipID]
-  ArduinoOTA.setHostname("smarttemp");
+  ArduinoOTA.setHostname(_SMT_HOST);
 
   // No authentication by default
   // ArduinoOTA.setPassword("admin");

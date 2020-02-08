@@ -72,11 +72,18 @@
   - [Built With](#built-with)
 - [Getting Started](#getting-started)
   - [Hardware Prerequisites](#hardware-prerequisites)
-  - [Environmen Prerequisites](#environmen-prerequisites)
+  - [Circuit](#circuit)
+  - [Environment Prerequisites](#environment-prerequisites)
   - [Installation](#installation)
 - [Config.h options](#configh-options)
-- [Features](#features)
+- [Features / Whishlist](#features--whishlist)
 - [Roadmap](#roadmap)
+- [User Manual](#user-manual)
+  - [Encoder function](#encoder-function)
+  - [Thermal confort mode (Advanced)](#thermal-confort-mode-advanced)
+  - [PMV/PPD method](#pmvppd-method)
+  - [Modes](#modes)
+  - [In house / away selection](#in-house--away-selection)
 - [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
@@ -102,7 +109,7 @@ The project started using material left over from other projects and respecting 
 
 ### Built With
 
-* [Platform IO]()
+* [Platform IO](http://platformio.org)
 
 
 <!-- GETTING STARTED -->
@@ -123,6 +130,10 @@ For a detailed list of components refer to the documentation (BOM)
 7. Relay 
 8. 5v power source ( I used an Hi-Link 220v to 5v but you can use alse batteries )
 9. Wires and Connectors 
+
+### Circuit
+
+***!Work in progress!***
 
 ### Environment Prerequisites
 
@@ -153,30 +164,91 @@ git clone https://github.com/dianlight/SmartTemp.git
 <!-- FEATURES -->
 ## Features / Whishlist
 
-[x] Standalone Thermostat
-  [x] Current Room Temperature
-  [x] Current Room Humidity
-  [x] 3 levels of temperatures. (ECO, NORMAL and CONFORT)
-  [x] Week programming
-[x] Advanced Thermostat
-  [x] Away/In_house temp control step
-  [x] Auto, Manual and Off mode
-[x] Smart Thermostat (Wifi remote controlled)
-  [x] MQTT transport
-  [x] HomeAssistant climate compatibility (via MQTT integration)
-    [ ] Homeassistant room presence integration ( auto AWAY/NORMAL mode )
-  [x] NTP clock sync (daylight auto switch)
-[x] WebInterface
-  [ ] Mobile WebApp
+- [x] Standalone Thermostat
+  - [x] Current Room Temperature
+  - [x] Current Room Humidity
+  - [x] 3 levels of temperatures. (ECO, NORMAL and CONFORT)
+  - [x] Week programming (15min resolution)
+- [ ] Supported units
+  - [x] Celsius mode
+  - [ ] Fahrenheit mode ( [Wikipedia](https://en.wikipedia.org/wiki/Fahrenheit) )
+- [x] Advanced Thermostat
+  - [x] Away/In_house temp control
+  - [x] Auto, Manual and Off mode
+  - [ ] Thermal confort mode 
+    - [ ] [PMV/PPD method](https://en.wikipedia.org/wiki/Thermal_comfort#PMV/PPD_method)
+    - [ ] [Adaptive comfort model](https://en.wikipedia.org/wiki/Thermal_comfort#Adaptive_comfort_model)<sup>1</sup>
+    - [ ] [ASHRAE-55](https://comfort.cbe.berkeley.edu/)<sup>2</sup>
+    - [ ] [EN-16798](https://comfort.cbe.berkeley.edu/)<sup>2</sup>
+- [x] Smart Thermostat (Wifi remote controlled)
+  - [x] MQTT transport
+  - [x] HomeAssistant climate compatibility (via MQTT integration)
+    - [ ] Homeassistant room presence integration ( auto AWAY/NORMAL mode )
+  - [x] NTP clock sync (daylight auto switch)
+    - [ ] Time Zone configuration
+- [x] WebInterface
+  - [ ] Mobile WebApp
+- [ ] External sensor
+  - [ ] Wifi temperature sensor
+  - [ ] Wifi pressure sensor
+  - [ ] Wifi air speed sensor
+  - [ ] Home Assistant collector
+- [x] Enclosure (3D STL printable models)
+  - [x] Italian BTicino Living 2Gang
+  - [ ] EU standard
+  - [ ] UK standard
+  - [ ] US standard
 
+_*Checked are implemented_
 
-***!Work in progress!***
+_<sup>1</sup>Require external temperature sensor_
+
+_<sup>2</sup>Require external temperature, pressure sensor and internet connection_
+
 
 
 <!-- ROADMAP -->
 ## Roadmap
 
 See the [open issues](https://github.com/dianlight/SmartTemp/issues) for a list of proposed features (and known issues).
+
+<!-- USER MANUAL -->
+## User Manual
+
+### Encoder function
+
+***!Work in progress!***
+
+### Thermal confort mode (Advanced)
+
+***!Work in progress not yet implemented!*** 
+
+The thermal confort mode allows you to set the thermostat not based on the real  desired temperature but on the basis of the [confort temperature](https://en.wikipedia.org/wiki/Thermal_comfort#Interplay_of_temperature_and_humidity). This significantly increases comfort by reducing consumption.
+
+### [PMV/PPD method](https://en.wikipedia.org/wiki/Thermal_comfort#PMV/)
+
+![Temp/Humidity](https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Temperature-relative_humidity_chart_-_PMV_method.png/1024px-Temperature-relative_humidity_chart_-_PMV_method.png)
+
+
+### Modes 
+
+| Mode | Description | Home modfity | Away modify | Note |
+| --- | --- | --- | --- | --- |
+| Auto | Follow the Week program to set *Eco*, *Normal* or *Confort* target temp | none | &plusmn; delta | |
+| Manual | Follow the setting of selected target temp | none | &plusmn; delta | return to *Auto* mode after impoisted time |
+
+### In house / away selection
+
+| Selection | Mode | Description | Function | Note |
+| --- | --- | --- | --- | --- |
+| In house  | Auto | Standard mode | Follow week program | |
+| In house  | Manual | Temporary mode | Follow selected target temperature until timeout expire | Automatic return to *Auto* mode |
+| Away      | Auto | Advanced mode | Follow week program with a &plusmn; temperature delta | |
+| Away      | Eco  | Advanced mode | Lock to *Eco* target temperature  with a &plusmn;  delta | No automatic return to *Auto* mode |
+| Away      | Normal  | Advanced mode | Lock to *Normal* target temperature with a &plusmn;  delta | No automatic return to *Auto* mode |
+| Away      | Confort  | Advanced mode | Lock to *Confort* target temperature with a &plusmn;  delta | No automatic return to *Auto* mode |
+
+
 
 <!-- CONTRIBUTING -->
 ## Contributing

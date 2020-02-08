@@ -8,7 +8,15 @@
     #define _SMT_VERSION STR(SMT_VERSION)   
 #endif
 
-#define DEBUG_REMOTE
+#ifndef SMT_HOST
+    #define _SMT_HOST "SmartTemp"
+#else
+    #define _SMT_HOST  STR(SMT_HOST)
+#endif
+
+#ifndef DEBUG_REMOTE
+    #define DEBUG_REMOTE
+#endif
 //#define DEBUG_SERIAL
 #if defined(DEBUG_REMOTE) || defined(DEBUG_SERIAL)
     //#define DEBUG_I2C_SCAN

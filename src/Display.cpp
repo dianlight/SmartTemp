@@ -139,6 +139,10 @@ void loopDisplay() {
     u8g2.firstPage();
     do {
         u8g2.clearBuffer();
+
+
+        // Header ( Target temp, Humidity and icons )
+
         if (WiFi.status() == WL_CONNECTED) {
             u8g2.setFont(u8g2_font_open_iconic_embedded_1x_t);
             u8g2.drawGlyph(128-8, 10, 0x50);	
@@ -168,15 +172,12 @@ void loopDisplay() {
             u8g2.drawGlyph(0, 10, 0x40);	
         }
 
-
-
-        // Temp ant time display
         u8g2.setFont(fontName);
         if(myConfig.get()->mode != Config::OFF){
-            u8g2.setCursor(12,12);
+            u8g2.setCursor(12,10);
             u8g2.printf("%2.1f\xB0\x43",TARGET_TEMP);
         }
-        u8g2.setCursor(48+10,12);
+        u8g2.setCursor(48+10,10);
         u8g2.printf("%2.0f%%",curHumidity);
 
         u8g2.setFont(u8g2_font_open_iconic_thing_1x_t);
@@ -201,7 +202,7 @@ void loopDisplay() {
 
 
         // Main display
-        u8g2.drawHLine(0,14,128);
+        u8g2.drawHLine(0,13,128);
         u8g2.drawHLine(0,14+28,128);
         if(!myConfig.getMode()->active){
           u8g2.setFont(u8g2_font_profont29_tr);

@@ -63,3 +63,8 @@
 
 }
 
+.tabSelected {
+    background-color: gray;
+    color: whitesmoke;    
+}
+

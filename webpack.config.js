@@ -1,8 +1,11 @@
 const path = require('path');
 const CompressionPlugin = require('compression-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
+const HtmlReplaceWebpackPlugin = require('html-replace-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 let read = 0;
+let genv,gargv;
 
 
 var config = {
@@ -15,7 +18,32 @@ var config = {
     path: path.resolve(__dirname, 'data'),
     //    publicPath: "/"
   },
-  plugins: [],
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: '!!html-loader!src/node/index.html',
+    }),
+    new HtmlReplaceWebpackPlugin([
+      {
+        pattern: '@@title',
+        replacement: 'html replace webpack plugin'
+      },
+      {
+        pattern: /(\{\{ ([\w-_\.\(\)\/]+) \s*\}\})/g,
+        replacement: function(match, command) {
+          // those formal parameters could be:
+          // match: <-- env:SMT_VERSION-->
+          // type: argv, argvenv, webpackenv, npmenv
+          // value: SMT_VERSION
+//          console.log("--------",genv,"----------",process.env,"----------",gargv,'-------------');
+//          console.log(match,command);
+          let argv = gargv;
+          const titleize = require('titleize');
+          console.log(command,JSON.stringify(eval(command)));
+          return eval(command);
+        }
+      }
+    ])
+  ],
   module: {
     rules: [
       { test: /\.css(\?mtime=\d+)?$/i, use: ['style-loader', 'css-loader'] },
@@ -41,6 +69,8 @@ var config = {
             loader: 'html-loader',
             options: {
               minimize: true,
+              interpolate: true,
+              esModule: false,
               attrs: ['img:src', 'link:href', 'iframe:src'],
             }
           },
@@ -48,8 +78,9 @@ var config = {
       },
       {
         test: /\.js$/,
-        use: ["source-map-loader"],
-        enforce: "pre"
+        use: [
+          "source-map-loader",
+        ],
       }
     ]
   },
@@ -117,6 +148,9 @@ var config = {
 };
 
 module.exports = (env, argv) => {
+//  console.log("Env:",process.env,"ArgV:",argv);
+  genv = env;
+  gargv = argv;
 
   if (argv.mode === 'development') {
     config.devtool = 'source-map';

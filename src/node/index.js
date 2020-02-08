@@ -1,4 +1,3 @@
-import "./index.html"
 import "mini.css/dist/mini-default.css"
 import "./holds.css"
 import "./favicon.ico"
@@ -6,6 +5,7 @@ import "./favicon.ico"
 import "xterm/css/xterm.css"
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
+import ReconnectingWebSocket from 'reconnecting-websocket';
 
 import "chibijs"
 import populate from "populate.js"
@@ -96,10 +96,10 @@ const term = new Terminal();
 
 function show(what){
   $(".panel").hide();
+  $('header a').removeClass('bordered');
   $("#saveButtons").hide();
   currentPanel=what;
   if(currentPanel == "home"){
-//    refreshDisplay();
     refreshDisplayFromMap();
   }else if(currentPanel == "program"){
     clearTimeout(displayTimeout);
@@ -111,27 +111,10 @@ function show(what){
     clearTimeout(displayTimeout);
     term.scrollToBottom();
   }
+  $("#"+what+"Tab").toggleClass("bordered");
   $("#"+what).show();
 }
 window.show = show;
-
-
-
-function refreshDisplay(){
-  $().ajax("screen","GET",function(data,status){
-    let rows = data.split("\n");
-    let ctx = $("#screen")[0].getContext('2d');
-    ctx.fillStyle = 'rgb(0, 0, 0)';
-    for(let y=0; y < 64; y++){
-      for(let x=0; x< 128; x++){
-        if(rows[y+3][x] === '1')ctx.fillStyle = 'rgb(0, 0, 0)';
-        else ctx.fillStyle = 'rgb(255, 255, 255)';
-        ctx.fillRect(x,y,1,1);
-      }
-    }
-  //  displayTimeout = setTimeout(refreshDisplay,500);
-  });
-}
 
 function refreshDisplayFromMap(){
   var oReq = new XMLHttpRequest();
@@ -143,7 +126,6 @@ function refreshDisplayFromMap(){
     var arrayBuffer = oReq.response; // Note: not oReq.responseText
     if (arrayBuffer) {
       var byteArray = new Uint8Array(arrayBuffer);
-//      console.log(byteArray);
       if(byteArray[0] != 0x50 || byteArray[1] != 0x34){
         console.error("Only BPM P4 (Binary) are supported!")
         throw BreakException;
@@ -195,11 +177,12 @@ $().ready(function(){
   term.writeln('Console \x1B[1;3;31mconnecting...\x1B[0m');
 
   // StartPage
-  //show("home");
-  show("debug")
+
+//  show("home");
+  show("debug");
 
   // WebSockets
-  var debug_service = new WebSocket('ws://'+window.location.host+'/ws');
+  var debug_service = new ReconnectingWebSocket('ws://'+window.location.host+'/ws');
   debug_service.onmessage = function(event){
    // console.log("Messaggio",event);
     term.writeln(event.data);

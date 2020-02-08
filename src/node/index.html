@@ -2,16 +2,17 @@
 
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SmartTemp | {{CURRENT_MODE}}</title>
-    <script src="main.js"></script>
+    <title>{{ titleize(process.env.npm_package_name) }}</title>
 </head>
 
 <body>
     <header class="sticky">
-        <a href="#" class="logo" onclick="show('home')">SmartTemp</a>
-        <a href="#" class="button" onclick="show('program')">Program</a>
-        <a href="#" class="button" onclick="show('config')">Config</a>
-        <a href="#" class="button" onclick="show('debug')">Debug</a>
+        <a id="homeTab" href="#" class="logo" onclick="show('home')">{{ titleize(argv.env.DEFINE_SMT_HOST) }}</a>
+        <a id="programTab" href="#" class="button" onclick="show('program')">Program</a>
+        <a id="configTab" href="#" class="button" onclick="show('config')">Config</a>
+        <!-- #ifdef DEBUG_REMOTE -->
+        <a id="debugTab" href="#" class="button" onclick="show('debug')">Debug</a>
+        <!-- #endif -->
     </header>
 
     <div id="home" class="panel container">
@@ -195,14 +196,22 @@
         </form>
     </div>
 
+    <!-- #ifdef DEBUG_REMOTE -->
     <div id="debug" class="panel" style="padding-left: 15px;">
         <div id="terminal"></div>
     </div>
+    <!-- #endif -->
 
     <footer class="sticky">
         <div class="row">
             <div class="col-sm-12 col-md-10 col-sm-last">
-                <p>Version: {{VERSION}} &#xA9; {{COPYRIGHT}}</p>
+                <p>Version: {{ argv.env.DEFINE_SMT_VERSION }}
+                    <!-- {{ argv }} -->
+                    -{{ process.env.npm_package_version }}
+                    <!--            -->
+                    ({{ process.env.npm_package_gitHead }}) &#xA9; {{ process.env.npm_package_author_name }} 
+                     <!--           -->
+                    // {{ process.env.npm_package_license }}</p>
             </div>
             <div class="col-sm-12 col-md-2 col-md-last">
                 <div id="saveButtons" class="button-group">

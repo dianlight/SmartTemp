@@ -1,5 +1,5 @@
 from os.path import join, isfile, isdir, basename
-from os import listdir, system
+from os import listdir, system, environ
 import json
 from pprint import pprint
 import re
@@ -142,6 +142,7 @@ struct StaticFile
         output_file.write(output)
 
 def process_html_app(source, dest, env):
+
     web_server_static_files = join(dest, "web_server_static_files.h")
     web_server_static = join("$BUILDSRC_DIR", "web_server_static.cpp.o")
 
@@ -150,7 +151,7 @@ def process_html_app(source, dest, env):
 #            print("Process file: ",file);
             data_file = join(source, file)
             header_file = join(dest, "web_server."+file+".h")
-            print("Data: {} Header: {}".format(data_file,header_file))
+#            print("Data: {} Header: {}".format(data_file,header_file))
             env.Command(header_file, data_file, data_to_header)
             env.Depends(web_server_static_files, header_file)
 
@@ -159,6 +160,7 @@ def process_html_app(source, dest, env):
 #
 # Generate Web app resources
 #
+#print("PYTHON ENV:{}\n".format(env.Dump()))
 if npm_installed:
     headers_src = join(env.subst("$PROJECTSRC_DIR"), "web_static")
 
@@ -166,7 +168,23 @@ if npm_installed:
     dist_dir = join(env.subst("$PROJECT_DIR"), "data")
     node_modules = join(env.subst("$PROJECT_DIR"), "node_modules")
 
-    subprocess.check_call("npm run compile",shell=True)
+    my_env = environ.copy()
+    my_flags = env.ParseFlags(env['BUILD_FLAGS'])
+    for item in my_flags.get("CPPDEFINES"):
+        if isinstance(item,list):
+#            print(item[0],item[1])
+            my_env["DEFINE_"+item[0]] = item[1]
+        elif isinstance(item,str):
+#            print(item,'True')
+            my_env["DEFINE_"+item] = 'True' 
+        else:
+            print(item)       
+        
+    my_env["PROGNAME"] = env["PROGNAME"]
+    my_env["UPLOAD_PORT"] = env["UPLOAD_PORT"]
+
+
+    subprocess.check_call("npm run compile",shell=True,env=my_env)
     # Check to see if the Node modules have been downloaded
     if(isdir(node_modules)):
         if(isdir(dist_dir)):
