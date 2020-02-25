@@ -3,5 +3,5 @@
 
 void setupMQTT();
 void loopMQTT();
-void sendMQTTState();
+bool sendMQTTState();
 void sendMQTTAvail(bool online);

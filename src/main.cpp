@@ -23,9 +23,11 @@ Config myConfig;
 
 AT8I2CGATEWAY at8gw(AT8_I2C_GW);
 
+Thermostat thermostat(myConfig);
+
 // Base structure data:
 bool heating = false;
-float curTemp = 20.4f;
+//float curTemp = 20.4f;
 float curHumidity = 80.9f;
 
 WiFiEventHandler stationConnectedHandler;
@@ -67,55 +69,30 @@ void setup()
   at8gw.i2cReader();
   delay(500);
 
-  setupWifi(at8gw.getEncoderButton() == 3); // Pressed
+  setupWifi(at8gw.getEncoderButton() == AT8I2CGATEWAY::CLICK_CODE::HELD); 
 
   delay(500);
+
+  thermostat.setHeatingCallback([](bool isHeating){
+    #ifdef DEBUG_EVENT
+      debugV("Relay %s %f > %f",isHeating?"On":"Off",curTemp,TARGET_TEMP);
+    #endif
+    at8gw.setRelay(isHeating);
+    if (WiFi.status() == WL_CONNECTED){
+      if(sendMQTTState()){
+         sendMQTTAvail(true);
+      }
+    } 
+  });
 }   
-
-unsigned long checkLastTime, switchLastTime, manualTime;
-
 
 void loop()
 {
   loopDisplay();
   if(!loopOTA()){
-      if(millis() - checkLastTime > 5000){
-          // Automation
-          if(myConfig.get()->returnAutoTimeout > 0 
-                && !myConfig.get()->away 
-                && myConfig.get()->hold == Config::MODES::MANUAL 
-                && millis() - manualTime > myConfig.get()->returnAutoTimeout * 1000){
-            myConfig.get()->hold = Config::MODES::AUTO;
-          }
-
-          // Relay Control      
-          if(curTemp - myConfig.get()->tempPrecision < TARGET_TEMP && millis() - switchLastTime > myConfig.get()->minSwitchTime * 1000){
-            #ifdef DEBUG_EVENT
-              debugV("Relay On %f < %f",curTemp - myConfig.get()->tempPrecision,TARGET_TEMP);
-            #endif
-            at8gw.setRelay(true);
-            switchLastTime = millis();
-          } else if(curTemp + myConfig.get()->tempPrecision > TARGET_TEMP && millis() - switchLastTime > myConfig.get()->minSwitchTime * 1000) {
-            #ifdef DEBUG_EVENT
-              debugV("Relay Off %f > %f",curTemp - myConfig.get()->tempPrecision,TARGET_TEMP);
-            #endif
-            at8gw.setRelay(false);
-            switchLastTime = millis();
-          } else {
-            #ifdef DEBUG_EVENT
-              debugV("Const Relay %s\n",heating?"On":"Off");
-              at8gw.setRelay(heating);
-            #endif
-          }
-          if (WiFi.status() == WL_CONNECTED){
-            sendMQTTAvail(true);
-            sendMQTTState();
-          } 
-          checkLastTime = millis();
-      }
       at8gw.i2cReader();
       curHumidity = at8gw.getHumidity();
-      curTemp = at8gw.getTemperature() + FIXED_TEMP_CORRECTION;
+      thermostat.setCurrentTemp(at8gw.getTemperature() + FIXED_TEMP_CORRECTION);
       heating = at8gw.getRelay();
 
       if (WiFi.status() == WL_CONNECTED){

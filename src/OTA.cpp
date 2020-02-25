@@ -1,7 +1,7 @@
 #include "OTA.h"
 #include <ArduinoOTA.h>
 #include <ESP8266WiFi.h>
-#include <Ticker.h>
+//#include <Ticker.h>
 #include "Display.h"
 #include "MyMQTT.h"
 #include "Config.h"

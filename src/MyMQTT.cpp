@@ -5,6 +5,7 @@
 #include <ArduinoJson.h>
 #include "at8i2cGateway.h"
 #include "Thermostat.h"
+extern Thermostat thermostat;
 
 #include "Config.h"
 extern Config myConfig;
@@ -14,8 +15,6 @@ PubSubClient client(espClient);
 
 time_t lastRegister, lastRetry = 0;
 extern bool heating;
-extern float curTemp;
-extern unsigned long manualTime;
 
 void callback(char* topic, byte* payload, unsigned int length) {
   #ifdef DEBUG_MQTT 
@@ -27,19 +26,14 @@ void callback(char* topic, byte* payload, unsigned int length) {
   } else if(strstr(topic,"thermostatModeCmd") != NULL){
     for (byte i = 0; i < Config::MODES::M_SIZE; i++){
       if(memcmp(payload,myConfig.MODES_MQTT_NAME[i],3) == 0){
-        myConfig.get()->mode = i;
-        if(myConfig.get()->mode == Config::MANUAL){
-          manualTime = millis();
-        }
+        thermostat.setMode((Config::MODES)i);
         break;  
       }
     }
   } else if(strstr(topic,"holdModeCmd") != NULL){
     for (byte i = 0; i < Config::HOLDS::H_SIZE; i++){
       if(memcmp(payload,myConfig.HOLDS_MQTT_NAME[i],3) == 0){
-        myConfig.get()->hold = i;
-        myConfig.get()->mode = Config::MANUAL;
-        manualTime = millis();
+        thermostat.setHold((Config::HOLDS)i);
         break;  
       }
     }
@@ -148,8 +142,9 @@ bool reconnect() {
       #endif
       }
 
-      sendMQTTAvail(true);
-      sendMQTTState();
+      if ( sendMQTTState()){
+        sendMQTTAvail(true);
+      }
 
       client.subscribe((rtopic +"/targetTempCmd").c_str());
       client.subscribe((rtopic +"/thermostatModeCmd").c_str());
@@ -203,9 +198,6 @@ void setupMQTT() {
 }
 
 void loopMQTT() {
-//  if(lastRegister !=0 && millis() - lastRegister > 60000*30){  // 30min autoregister mtqq
-//    client.disconnect();
-//  }
   if (!client.loop() && millis() - lastRetry > 30000) {
     if(reconnect())lastRegister = millis();
     lastRetry = millis();
@@ -228,8 +220,8 @@ void sendMQTTAvail(bool online) {
 
 String oldjson;
 
-void sendMQTTState() {
-  if (!client.connected())return;
+bool sendMQTTState() {
+  if (!client.connected())return false;
 
   // Memory pool for JSON object tree.
   //
@@ -245,13 +237,13 @@ void sendMQTTState() {
   String topic = String("homeassistant/climate/")+ myConfig.get()->mqtt_client_id;
   
   root["mode"] = CURRENT_MODE_MQTT; // "off" "heat",
-  float targetTemp = TARGET_TEMP;
+  float targetTemp = thermostat.getCurrentTarget();
   root["target_temp"] = targetTemp; //TARGET_TEMP;
   root["away"] = myConfig.get()->away;
   if(!myConfig.get()->away){
     root["hold"] = CURRENT_HOLD_MQTT;
   }
-  root["current_temp"] = round(curTemp*10)/10;
+  root["current_temp"] = round(thermostat.getCurrentTemp()*10)/10;
   root["current_action"] = CURRENT_ACTION_MQTT;
 
   String json;
@@ -260,7 +252,7 @@ void sendMQTTState() {
      #ifdef DEBUG_MQTT
       debugV("Skip MQTT status update. Equal JSON\n");
      #endif
-     return;
+     return false;
   }
   oldjson = json;
 
@@ -277,5 +269,8 @@ void sendMQTTState() {
     #endif
   }
 
+  return true;
+
 }
+
 

@@ -9,3 +9,5 @@ data/index.html.gz
 data/main.js.gz
 data/index.html
 .DS_Store
+.vscode/extensions.json
+.vscode/settings.json

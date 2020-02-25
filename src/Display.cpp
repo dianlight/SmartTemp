@@ -12,6 +12,8 @@
 //#include <ezTime.h>
 
 #include "Thermostat.h"
+extern Thermostat thermostat;
+
 #include "Network.h"
 
 extern Config myConfig;
@@ -31,7 +33,6 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* c
 
 extern PubSubClient client;
 extern bool heating;
-extern float curTemp;
 extern float curHumidity;
 #define MAX_DEPTH 2
 
@@ -77,19 +78,17 @@ void setupDisplay() {
 
 
 unsigned long lastTime = 0, lastBtnTime = 0;
-extern unsigned long manualTime;
 
 void loopDisplay() {
     if( at8gw.getEncoder() > lastEncPosition && !psMode && !myConfig.getMode()->active){
+      thermostat.setMode(Config::MODES::MANUAL);
       myConfig.get()->mode= Config::MODES::MANUAL;
-      manualTime = millis();
       myConfig.get()->hold= (myConfig.get()->hold+1) %  Config::HOLDS::H_SIZE;
       lastEncPosition = at8gw.getEncoder();
       lastAction=millis();
       myConfig.saveConfig();
     } else if ( at8gw.getEncoder() < lastEncPosition && !psMode && !myConfig.getMode()->active){
-      myConfig.get()->mode= Config::MODES::MANUAL;
-      manualTime = millis();
+      thermostat.setMode(Config::MODES::MANUAL);
       myConfig.get()->hold= abs(myConfig.get()->hold-1) %  Config::HOLDS::H_SIZE;
       lastEncPosition = at8gw.getEncoder();
       lastAction=millis();
@@ -175,7 +174,7 @@ void loopDisplay() {
         u8g2.setFont(fontName);
         if(myConfig.get()->mode != Config::OFF){
             u8g2.setCursor(12,10);
-            u8g2.printf("%2.1f\xB0\x43",TARGET_TEMP);
+            u8g2.printf("%2.1f\xB0\x43",thermostat.getCurrentTarget());
         }
         u8g2.setCursor(48+10,10);
         u8g2.printf("%2.0f%%",curHumidity);
@@ -207,7 +206,7 @@ void loopDisplay() {
         if(!myConfig.getMode()->active){
           u8g2.setFont(u8g2_font_profont29_tr);
           u8g2.setCursor(26,40);
-          u8g2.printf("%2.1f",curTemp);
+          u8g2.printf("%2.1f",thermostat.getCurrentTemp());
           u8g2.setFont(u8g2_font_5x7_mf);
           u8g2.drawGlyph(90,44-22,'o');
           u8g2.setFont(fontName);

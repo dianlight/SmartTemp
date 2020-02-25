@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Ticker.h>
+//#include <Ticker.h>
 
 
 class AT8I2CGATEWAY {
