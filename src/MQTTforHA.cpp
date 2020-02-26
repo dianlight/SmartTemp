@@ -1,12 +1,7 @@
 #include "MQTTforHA.h"
-#include <WiFiClient.h>
-#include <PubSubClient.h>
 #include <strings.h>
 #include <ArduinoJson.h>
 #include "at8i2cGateway.h"
-
-WiFiClient espClient;
-PubSubClient client(espClient);
 
 void MQTTforHA::callback(char* topic, byte* payload, unsigned int length) {
   #ifdef DEBUG_MQTT 
@@ -184,7 +179,11 @@ bool MQTTforHA::reconnect() {
     }
 }
 
-MQTTforHA::MQTTforHA(Thermostat &thermostat,Config &myConfig, AT8I2CGATEWAY &at8gw): thermostat(thermostat), myConfig(myConfig), at8gw(at8gw) {
+MQTTforHA::MQTTforHA(Thermostat &thermostat,Config &myConfig, AT8I2CGATEWAY &at8gw): thermostat(thermostat),
+ myConfig(myConfig), 
+ at8gw(at8gw),
+ client(espClient) 
+ {
   client.setServer(myConfig.get()->mqtt_server, atoi(myConfig.get()->mqtt_port));
   client.setCallback(std::bind(&MQTTforHA::callback,this,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
   mqttTicker.attach_ms_scheduled(250,std::bind(&MQTTforHA::loopMQTT,this));

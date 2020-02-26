@@ -15,7 +15,7 @@
 #include "OTA.h"
 #include "at8i2cGateway.h"
 #include "MQTTforHA.h"
-#include "MyTimeNTP.h"
+#include "TimeNTPClient.h"
 #include "I2CDebug.h"
 #include "Thermostat.h"
 #include "Webserver.h"
@@ -26,14 +26,14 @@ Config myConfig;
 AT8I2CGATEWAY at8gw(AT8_I2C_GW);
 
 Thermostat thermostat(myConfig);
-
-extern PubSubClient client;
-
-Display display(thermostat, myConfig, client, at8gw);
-
+             
 OTA *ota;
 
 MQTTforHA *mQTTforHA;
+
+TimeNTPClient timeNTPClient = TimeNTPClient();
+
+Display display(thermostat, myConfig, at8gw,timeNTPClient);
 
 // Base structure data:
 //bool heating = false;
@@ -48,7 +48,7 @@ void onStationModeGotIP(const WiFiEventStationModeGotIP& evt) {
 
   display.bootConnectedDisplay();
 
-  setupNTP();
+  //setupNTP();
 
   ota = new OTA(display);
   ota->addOtaCallback([](OTA::OTA_EVENT event){
@@ -69,6 +69,7 @@ void onStationModeGotIP(const WiFiEventStationModeGotIP& evt) {
  
 //  setupMQTT();
   mQTTforHA = new MQTTforHA(thermostat,myConfig,at8gw);
+  display.setMQTTforHA(mQTTforHA);
 
   setupWebServer();
 
@@ -127,7 +128,7 @@ void loop()
           networkLoop();
 //          loopMQTT();
           loopWebServer();
-          loopNTP();
+//          loopNTP();
       }
   }
 }

@@ -1,10 +1,9 @@
 #include <ESP8266WiFi.h>
-#include <PubSubClient.h>
 
 #include "Display.h"
 #include <Wire.h>
 
-#include "MyTimeNTP.h"
+#include "TimeNTPClient.h"
 
 //#define fontName u8g2_font_profont10_tf
 #define fontName u8g2_font_haxrcorp4089_tr
@@ -46,10 +45,10 @@ void Display::sleepModeDisplay()
   }
 }
 
-Display::Display(Thermostat &thermostat, Config &myConfig, PubSubClient &mqttclient, AT8I2CGATEWAY &at8gw) : thermostat(thermostat),
+Display::Display(Thermostat &thermostat, Config &myConfig, AT8I2CGATEWAY &at8gw, TimeNTPClient &timeNTPClient) : thermostat(thermostat),
                                                                                                              myConfig(myConfig),
-                                                                                                             mqttclient(mqttclient),
-                                                                                                             at8gw(at8gw)
+                                                                                                             at8gw(at8gw),
+                                                                                                             timeNTPClient(timeNTPClient)
 {
 
   //U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // pin remapping with ESP8266 HW I2C
@@ -171,7 +170,7 @@ void Display::loopDisplay()
       _u8g2.drawGlyph(128 - 17, 10, 0x4E);
     }
 
-    if (mqttclient.state() == 0)
+    if (_mqttforHA != NULL && _mqttforHA->state() == 0)
     {
       _u8g2.setFont(u8g2_font_open_iconic_thing_1x_t);
       _u8g2.drawGlyph(128 - 28, 10, 0x46);
@@ -214,7 +213,7 @@ void Display::loopDisplay()
       _u8g2.setCursor(5 * fontX, 63);
       _u8g2.printf("%s", CURRENT_HOLD_STR);
       _u8g2.setCursor(128 - 47, 63);
-      _u8g2.printf("%s  %.2d:%.2d", DAYSNAME[getNTPTime()->tm_wday].c_str(), getNTPTime()->tm_hour, getNTPTime()->tm_min);
+      _u8g2.printf("%s  %.2d:%.2d", DAYSNAME[timeNTPClient.getNTPTime()->tm_wday].c_str(), timeNTPClient.getNTPTime()->tm_hour, timeNTPClient.getNTPTime()->tm_min);
     }
     else
     {
@@ -340,11 +339,11 @@ void Display::loopDisplay()
       _u8g2.drawHLine(0, 63 - fontY - 1, 128);
       for (u8 i = 1, h = 0; i < 128; i += 4, h++)
       {
-        if (h == getNTPTime()->tm_hour)
+        if (h == timeNTPClient.getNTPTime()->tm_hour)
         {
           for (u8 im = i + 1, dm = 0; dm < 4; dm++, im += 9)
           {
-            if (dm == floor(getNTPTime()->tm_min / 15))
+            if (dm == floor(timeNTPClient.getNTPTime()->tm_min / 15))
             {
               if (!blink)
               {

@@ -2,7 +2,7 @@
 #include <Stream.h>
 #include <U8g2lib.h>
 #include <Ticker.h>
-#include <PubSubClient.h>
+#include <MQTTforHA.h>
 
 #include "at8i2cGateway.h"  
 #include "Thermostat.h"
@@ -25,7 +25,7 @@ const static std::string DAYSNAME[] = {
 class Display {
     public:
 
-        Display(Thermostat &thermostat, Config &myConfig, PubSubClient &mqttclient,AT8I2CGATEWAY &at8gw);
+        Display(Thermostat &thermostat, Config &myConfig, AT8I2CGATEWAY &at8gw, TimeNTPClient &timeNTPClient);
         void clearDisplay();
         void bootAPDisplay(String AP);
         void bootConnectedDisplay();
@@ -36,13 +36,16 @@ class Display {
         void screeshotbmp(Print &p);
         void loopDisplay();
 
+        void setMQTTforHA(MQTTforHA *mqttforHA){ _mqttforHA = mqttforHA; }
+
     private:
         typedef byte u8g2_Bitmap[U8_Height][U8_Width];
 
         U8G2 _u8g2;
+        MQTTforHA *_mqttforHA = NULL;
         Thermostat &thermostat;
         Config &myConfig;
-        PubSubClient &mqttclient;
+        TimeNTPClient &timeNTPClient;
         AT8I2CGATEWAY &at8gw;
 
         Ticker sleepModeTicker;
