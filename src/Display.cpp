@@ -14,7 +14,7 @@
 #define offsetY 0
 
 //extern PubSubClient client;
-extern bool heating;
+//extern bool heating;
 extern float curHumidity;
 #define MAX_DEPTH 2
 
@@ -165,7 +165,7 @@ void Display::loopDisplay()
       _u8g2.drawGlyph(128 - 8, 10, 0x4A);
     }
 
-    if (heating && blink)
+    if (at8gw.getRelay() && blink)
     {
       _u8g2.setFont(u8g2_font_open_iconic_thing_1x_t);
       _u8g2.drawGlyph(128 - 17, 10, 0x4E);

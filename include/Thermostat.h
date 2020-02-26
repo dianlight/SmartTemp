@@ -17,7 +17,7 @@
                                 (myConfig.get()->awayMode == Config::AWAY_MODES::AS_AUTO?myConfig.get()->hold:myConfig.get()->awayMode) \
                                 : myConfig.get()->hold  
 
-#define CURRENT_ACTION_MQTT  heating?"heating":((myConfig.get()->mode == Config::MODES::OFF)?"off":"idle"); // idle, cooling, heating, drying, or off
+#define CURRENT_ACTION_MQTT  at8gw.getRelay()?"heating":((myConfig.get()->mode == Config::MODES::OFF)?"off":"idle"); // idle, cooling, heating, drying, or off
 
 
 class Thermostat {

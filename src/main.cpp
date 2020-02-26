@@ -14,7 +14,7 @@
 #include "Display.h"
 #include "OTA.h"
 #include "at8i2cGateway.h"
-#include "MyMQTT.h"
+#include "MQTTforHA.h"
 #include "MyTimeNTP.h"
 #include "I2CDebug.h"
 #include "Thermostat.h"
@@ -33,8 +33,10 @@ Display display(thermostat, myConfig, client, at8gw);
 
 OTA *ota;
 
+MQTTforHA *mQTTforHA;
+
 // Base structure data:
-bool heating = false;
+//bool heating = false;
 //float curTemp = 20.4f;
 float curHumidity = 80.9f;
 
@@ -65,7 +67,8 @@ void onStationModeGotIP(const WiFiEventStationModeGotIP& evt) {
 
 //    setupOTA();
  
-  setupMQTT();
+//  setupMQTT();
+  mQTTforHA = new MQTTforHA(thermostat,myConfig,at8gw);
 
   setupWebServer();
 
@@ -102,8 +105,8 @@ void setup()
     #endif
     at8gw.setRelay(isHeating);
     if (WiFi.status() == WL_CONNECTED){
-      if(sendMQTTState()){
-         sendMQTTAvail(true);
+      if(mQTTforHA->sendMQTTState()){
+         mQTTforHA->sendMQTTAvail(true);
       }
     } 
   });
@@ -118,11 +121,11 @@ void loop()
       at8gw.i2cReader();
       curHumidity = at8gw.getHumidity();
       thermostat.setCurrentTemp(at8gw.getTemperature() + FIXED_TEMP_CORRECTION);
-      heating = at8gw.getRelay();
+//      heating = at8gw.getRelay();
 
       if (WiFi.status() == WL_CONNECTED){
           networkLoop();
-          loopMQTT();
+//          loopMQTT();
           loopWebServer();
           loopNTP();
       }

@@ -1,22 +1,14 @@
-#include "MyMQTT.h"
+#include "MQTTforHA.h"
 #include <WiFiClient.h>
 #include <PubSubClient.h>
 #include <strings.h>
 #include <ArduinoJson.h>
 #include "at8i2cGateway.h"
-#include "Thermostat.h"
-extern Thermostat thermostat;
-
-#include "Config.h"
-extern Config myConfig;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-time_t lastRegister, lastRetry = 0;
-extern bool heating;
-
-void callback(char* topic, byte* payload, unsigned int length) {
+void MQTTforHA::callback(char* topic, byte* payload, unsigned int length) {
   #ifdef DEBUG_MQTT 
     debugV("Message arrived [%s] %s\n",topic,payload);
   #endif 
@@ -44,7 +36,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   sendMQTTState();
 }
 
-bool reconnect() {
+bool MQTTforHA::reconnect() {
     // Loop until we're reconnected
     #ifdef DEBUG_EVENT
       debugV("Attempting MQTT connection..[%s:%s@%s:%s]\n",
@@ -192,12 +184,13 @@ bool reconnect() {
     }
 }
 
-void setupMQTT() {
+MQTTforHA::MQTTforHA(Thermostat &thermostat,Config &myConfig, AT8I2CGATEWAY &at8gw): thermostat(thermostat), myConfig(myConfig), at8gw(at8gw) {
   client.setServer(myConfig.get()->mqtt_server, atoi(myConfig.get()->mqtt_port));
-  client.setCallback(callback);
+  client.setCallback(std::bind(&MQTTforHA::callback,this,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
+  mqttTicker.attach_ms_scheduled(250,std::bind(&MQTTforHA::loopMQTT,this));
 }
 
-void loopMQTT() {
+void MQTTforHA::loopMQTT() {
   if (!client.loop() && millis() - lastRetry > 30000) {
     if(reconnect())lastRegister = millis();
     lastRetry = millis();
@@ -205,7 +198,7 @@ void loopMQTT() {
 }
 
 
-void sendMQTTAvail(bool online) {
+void MQTTforHA::sendMQTTAvail(bool online) {
    String topic = String("homeassistant/climate/")+ myConfig.get()->mqtt_client_id;
    #ifdef DEBUG_MQTT
     debugV("MQTT Available: %s\n",(online?"online":"offline"));
@@ -220,7 +213,7 @@ void sendMQTTAvail(bool online) {
 
 String oldjson;
 
-bool sendMQTTState() {
+bool MQTTforHA::sendMQTTState() {
   if (!client.connected())return false;
 
   // Memory pool for JSON object tree.
