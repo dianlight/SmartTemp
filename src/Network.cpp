@@ -1,7 +1,7 @@
 #include "Network.h"
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
-#include "Display.h"
+
 #include <WiFiUdp.h>
 
 //needed for library
@@ -11,6 +11,9 @@
 #define NO_EXTERN_AsyncWebSocket   // WiFi manager incompatibility!
 #include "Config.h"
 extern Config myConfig;
+
+#include "Display.h"
+extern Display display;
 
 // FIXME: Migrate do debug* macro
 
@@ -26,7 +29,7 @@ void saveConfigCallback () {
 void apModeCallback(WiFiManager *wfmanager) {
   Serial.print("Config AP:");
   Serial.println(wfmanager->getConfigPortalSSID());
-  bootAPDisplay(wfmanager->getConfigPortalSSID());
+  display.bootAPDisplay(wfmanager->getConfigPortalSSID());
 
 }
 
@@ -40,7 +43,7 @@ void setupWifi(bool captiveConfig) {
     int8_t status = WiFi.waitForConnectResult();
     if(status != WL_CONNECTED){
       Serial.printf("WiFi connection error or not configured! %d\n", status);
-      displayError("WiFi conncection error!");
+      display.displayError("WiFi conncection error!");
     }
   } else {
 
@@ -120,10 +123,10 @@ void setupWifi(bool captiveConfig) {
   
   Serial.println("local ip");
   Serial.println(WiFi.localIP());
-  bootConnectedDisplay();
+  display.bootConnectedDisplay();
   
   delay(1000);
-  clearDisplay();
+  display.clearDisplay();
 }
 
 

@@ -1,11 +1,10 @@
 #include <DNSServer.h>
 #include <ESP8266mDNS.h>
-//#include <FS.h>
 #include <ArduinoJson.h>
 #include <strings.h>
 #include <U8g2lib.h>
 #include "Display.h"
-//#include <LoopbackStream.h>
+extern Display display;
 #include <AsyncJson.h>
 
 #include "web_static/web_server_static_files.h"
@@ -37,14 +36,14 @@ AsyncWebServer server(80);
 
 void handleDisplayData(AsyncWebServerRequest *request) {
   AsyncResponseStream *response = request->beginResponseStream("image/x‑portable‑bitmap",10240U);
-  screeshot(*response);
+  display.screeshot(*response);
   request->send(response);
 }
 
 void handleDisplayBmpData(AsyncWebServerRequest *request) {
   AsyncResponseStream *response = request->beginResponseStream("image/x‑portable‑bitmap");
   response->addHeader("Content-Disposition","attachment; filename=\"screen.pbm\"");
-  screeshotbmp(*response);
+  display.screeshotbmp(*response);
   request->send(response);
 }
 

@@ -13,9 +13,9 @@
 
 #define CURRENT_HOLD_STR     myConfig.HOLDS_NAME[thermostat.getHold()]
 #define CURRENT_HOLD_MQTT    myConfig.HOLDS_MQTT_NAME[thermostat.getHold()]
-#define CURRENT_HOLD         _myConfig.get()->away? \
-                                (_myConfig.get()->awayMode == Config::AWAY_MODES::AS_AUTO?_myConfig.get()->hold:_myConfig.get()->awayMode) \
-                                : _myConfig.get()->hold  
+#define CURRENT_HOLD         myConfig.get()->away? \
+                                (myConfig.get()->awayMode == Config::AWAY_MODES::AS_AUTO?myConfig.get()->hold:myConfig.get()->awayMode) \
+                                : myConfig.get()->hold  
 
 #define CURRENT_ACTION_MQTT  heating?"heating":((myConfig.get()->mode == Config::MODES::OFF)?"off":"idle"); // idle, cooling, heating, drying, or off
 
@@ -24,7 +24,7 @@ class Thermostat {
     public:
         typedef void (*HeatingCallback)(bool isHeating);
 
-        Thermostat(Config myConfig);
+        Thermostat(Config &myConfig);
 
         void setHeatingCallback(HeatingCallback heatingCallback);
         void setMode(Config::MODES mode);
@@ -38,7 +38,7 @@ class Thermostat {
         byte  getHold(){return CURRENT_HOLD;}
 
     private:
-        Config _myConfig;    
+        Config &myConfig;    
         HeatingCallback _heatingCallback = NULL;
         unsigned long _switchLastTime, _manualTime;
         Ticker _loopTicker;

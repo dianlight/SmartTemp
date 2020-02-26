@@ -19,11 +19,17 @@
 #include "I2CDebug.h"
 #include "Thermostat.h"
 #include "Webserver.h"
+#include <PubSubClient.h>
+
 Config myConfig;
 
 AT8I2CGATEWAY at8gw(AT8_I2C_GW);
 
 Thermostat thermostat(myConfig);
+
+extern PubSubClient client;
+
+Display display(thermostat, myConfig, client, at8gw);
 
 // Base structure data:
 bool heating = false;
@@ -34,7 +40,7 @@ WiFiEventHandler stationConnectedHandler;
 
 void onStationModeGotIP(const WiFiEventStationModeGotIP& evt) {
 
-    bootConnectedDisplay();
+    display.bootConnectedDisplay();
 
     setupNTP();
 
@@ -56,8 +62,6 @@ void setup()
   while(!Serial);
 
   myConfig = Config();
-
-  setupDisplay();
 
   stationConnectedHandler = WiFi.onStationModeGotIP(&onStationModeGotIP);
 
@@ -88,7 +92,7 @@ void setup()
 
 void loop()
 {
-  loopDisplay();
+  display.loopDisplay();
   if(!loopOTA()){
       at8gw.i2cReader();
       curHumidity = at8gw.getHumidity();

@@ -1,8 +1,8 @@
 #include "OTA.h"
 #include <ArduinoOTA.h>
 #include <ESP8266WiFi.h>
-//#include <Ticker.h>
 #include "Display.h"
+extern Display display;
 #include "MyMQTT.h"
 #include "Config.h"
 
@@ -44,29 +44,29 @@ void setupOTA() {
   });
   ArduinoOTA.onEnd([]() {
     Serial.println("\nEnd");
-    displayError("Reboot..");
+    display.displayError("Reboot..");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Serial.print(".");
-    displayProgress((progress / (total / 100)),type);
+    display.displayProgress((progress / (total / 100)),type);
   });
   ArduinoOTA.onError([](ota_error_t error) {
     Serial.printf("Error[%u]: ", error);
     if (error == OTA_AUTH_ERROR) {
       Serial.println("Auth Failed");
-      displayError("Auth Failed");
+      display.displayError("Auth Failed");
     } else if (error == OTA_BEGIN_ERROR) {
       Serial.println("Begin Failed");
-      displayError("Begin Failed");
+      display.displayError("Begin Failed");
     } else if (error == OTA_CONNECT_ERROR) {
       Serial.println("Connect Failed");
-      displayError("Connect Failed");
+      display.displayError("Connect Failed");
     } else if (error == OTA_RECEIVE_ERROR) {
       Serial.println("Receive Failed");
-      displayError("Receive Failed");
+      display.displayError("Receive Failed");
     } else if (error == OTA_END_ERROR) {
       Serial.println("End Failed");
-      displayError("End Failed");
+      display.displayError("End Failed");
     }
   });
   ArduinoOTA.begin();
