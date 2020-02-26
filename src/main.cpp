@@ -31,24 +31,43 @@ extern PubSubClient client;
 
 Display display(thermostat, myConfig, client, at8gw);
 
+OTA *ota;
+
 // Base structure data:
 bool heating = false;
 //float curTemp = 20.4f;
 float curHumidity = 80.9f;
 
+static bool _inOTA = false;
+
 WiFiEventHandler stationConnectedHandler;
 
 void onStationModeGotIP(const WiFiEventStationModeGotIP& evt) {
 
-    display.bootConnectedDisplay();
+  display.bootConnectedDisplay();
 
-    setupNTP();
+  setupNTP();
 
-    setupOTA();
+  ota = new OTA(display);
+  ota->addOtaCallback([](OTA::OTA_EVENT event){
+    switch (event)
+    {
+    case OTA::OTA_EVENT::START/* constant-expression */:
+      _inOTA = true;
+      break;
+    case OTA::OTA_EVENT::STOP/* constant-expression */:
+    case OTA::OTA_EVENT::ERROR/* constant-expression */:
+      _inOTA = false;
+      break;
+    }
+  });
+
+
+//    setupOTA();
  
-    setupMQTT();
+  setupMQTT();
 
-    setupWebServer();
+  setupWebServer();
 
 }
 
@@ -88,12 +107,14 @@ void setup()
       }
     } 
   });
+
 }   
 
 void loop()
 {
   display.loopDisplay();
-  if(!loopOTA()){
+//  if(!loopOTA()){
+  if(!_inOTA){
       at8gw.i2cReader();
       curHumidity = at8gw.getHumidity();
       thermostat.setCurrentTemp(at8gw.getTemperature() + FIXED_TEMP_CORRECTION);
