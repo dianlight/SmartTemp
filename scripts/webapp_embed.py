@@ -181,7 +181,8 @@ if npm_installed:
             print(item)       
         
     my_env["PROGNAME"] = env["PROGNAME"]
-    my_env["UPLOAD_PORT"] = env["UPLOAD_PORT"]
+    if "UPLOAD_PORT" in env :
+        my_env["UPLOAD_PORT"] = env["UPLOAD_PORT"]
 
 
     subprocess.check_call("npm run compile",shell=True,env=my_env)

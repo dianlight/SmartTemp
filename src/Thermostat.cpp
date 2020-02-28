@@ -1,4 +1,5 @@
 #include "Thermostat.h"
+#include "EvoDebug.h"
 
 
 Thermostat::Thermostat(Config &myConfig): myConfig(myConfig) {
@@ -20,24 +21,27 @@ void Thermostat::_loopThermostat(){
         // Controllo Switch!
         if(_curTemp - myConfig.get()->tempPrecision < getCurrentTarget()){
             #ifdef DEBUG_EVENT
-                debugV("Relay On %f < %f",curTemp - myConfig.get()->tempPrecision,TARGET_TEMP);
+                debugD("Relay On %f < %f",getCurrentTemp() - myConfig.get()->tempPrecision,getCurrentTarget());
             #endif
             if(_heatingCallback != NULL)
                 _heatingCallback(true);
             _switchLastTime = millis();
         } else if(_curTemp + myConfig.get()->tempPrecision > getCurrentTarget()) {
             #ifdef DEBUG_EVENT
-                debugV("Relay Off %f > %f",curTemp - myConfig.get()->tempPrecision,TARGET_TEMP);
+                debugD("Relay Off %f > %f",getCurrentTemp() - myConfig.get()->tempPrecision,getCurrentTarget());
             #endif
             if(_heatingCallback != NULL)
                 _heatingCallback(false);
             _switchLastTime = millis();
-        } else {
+        }
+        /* 
+        else {
             #ifdef DEBUG_EVENT
-                debugV("Const Relay %s\n",heating?"On":"Off");
+                debugD("Const Relay %s\n",heating?"On":"Off");
                 at8gw.setRelay(heating);
             #endif
         }
+        */
     }
 }
 

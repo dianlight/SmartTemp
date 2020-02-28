@@ -43,10 +43,11 @@ class Display {
 
         U8G2 _u8g2;
         MQTTforHA *_mqttforHA = NULL;
+        
         Thermostat &thermostat;
         Config &myConfig;
-        TimeNTPClient &timeNTPClient;
         AT8I2CGATEWAY &at8gw;
+        TimeNTPClient &timeNTPClient;
 
         Ticker sleepModeTicker;
 

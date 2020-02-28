@@ -1,4 +1,5 @@
 #include "Network.h"
+#include "EvoDebug.h"
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 
@@ -21,14 +22,13 @@ extern Display display;
 //callback notifying us of the need to save config
 void saveConfigCallback () {
   #ifdef DEBUG_EVENT
-    Serial.println("Should save config");
+    debugD("Should save config");
   #endif
   myConfig.saveConfig();
 }
 
 void apModeCallback(WiFiManager *wfmanager) {
-  Serial.print("Config AP:");
-  Serial.println(wfmanager->getConfigPortalSSID());
+  debugD("Config AP:%s",wfmanager->getConfigPortalSSID().c_str());
   display.bootAPDisplay(wfmanager->getConfigPortalSSID());
 
 }
@@ -42,8 +42,35 @@ void setupWifi(bool captiveConfig) {
     delay(500);
     int8_t status = WiFi.waitForConnectResult();
     if(status != WL_CONNECTED){
-      Serial.printf("WiFi connection error or not configured! %d\n", status);
-      display.displayError("WiFi conncection error!");
+      switch (status)
+      {
+      case WL_IDLE_STATUS:
+        debugW("WiFi connection error or not configured! IDLE");
+        display.displayError("WiFi conncection error! IDLE");
+        break;
+      case WL_NO_SSID_AVAIL:
+        debugW("WiFi connection error or not configured! NO_SSD");
+        display.displayError("WiFi conncection error! NO_SSD");
+        break;
+      case WL_CONNECT_FAILED:
+        debugW("WiFi connection error or not configured! FAIL");
+        display.displayError("WiFi conncection error! FAIL");
+        break;
+      case WL_CONNECTION_LOST:
+        debugW("WiFi connection error or not configured! LOST");
+        display.displayError("WiFi conncection error! LOST");
+        break;
+      case WL_DISCONNECTED:
+        debugW("WiFi connection error or not configured! DICONNECTED");
+        display.displayError("WiFi conncection error! DICONNECTED");
+        break;
+      
+      case WL_SCAN_COMPLETED:
+      default:
+        debugW("WiFi connection error or not configured! Status=0x%x", status);
+        display.displayError("WiFi conncection error!");
+        break;
+      }
     }
   } else {
 
@@ -99,7 +126,7 @@ void setupWifi(bool captiveConfig) {
     //and goes into a blocking loop awaiting configuration
     
     if (!wifiManager.autoConnect()) {
-      Serial.println("failed to connect and hit timeout");
+      debugW("failed to connect and hit timeout");
       delay(3000);
       //reset and try again, or maybe put it to deep sleep
       ESP.reset();
@@ -107,7 +134,7 @@ void setupWifi(bool captiveConfig) {
     }
 
     //if you get here you have connected to the WiFi
-    Serial.println("connected...yeey :)");
+    debugI("connected...yeey :)");
 
     //read updated parameters
     strcpy(myConfig.get()->mqtt_server, custom_mqtt_server.getValue());
@@ -121,17 +148,12 @@ void setupWifi(bool captiveConfig) {
 
   }
   
-  Serial.println("local ip");
-  Serial.println(WiFi.localIP());
-  display.bootConnectedDisplay();
+//  debugI("AP: %s", WiFi.SSID().c_str());
+//  debugI("Local IP %s",WiFi.localIP().toString().c_str());
+//  display.bootConnectedDisplay();
   
-  delay(1000);
-  display.clearDisplay();
-}
-
-
-void networkLoop()
-{
+//  delay(1000);
+//  display.clearDisplay();
 }
 
 

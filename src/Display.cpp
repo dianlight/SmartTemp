@@ -1,6 +1,6 @@
-#include <ESP8266WiFi.h>
-
 #include "Display.h"
+#include <ESP8266WiFi.h>
+#include "EvoDebug.h"
 #include <Wire.h>
 
 #include "TimeNTPClient.h"
@@ -25,8 +25,8 @@ void Display::sleepModeDisplay()
   if (millis() - lastAction > myConfig.get()->displayPowerOff * 1000 && !myConfig.getMode()->active)
   {
     _u8g2.setPowerSave(1);
-#ifdef DEBUG_REMOTE
-    debugV("PowerOff Display");
+#ifdef DEBUG_DISPLAY
+    debugI("PowerOff Display");
 #endif
     psMode = true;
   }
@@ -34,8 +34,8 @@ void Display::sleepModeDisplay()
   {
     uint8_t ctn = map((millis() - lastAction) / 1000, myConfig.get()->displaySleep, myConfig.get()->displayPowerOff, myConfig.get()->displayContrast / 2, 0);
     _u8g2.setContrast(ctn);
-#ifdef DEBUG_REMOTE
-    debugV("Display Power %d", ctn);
+#ifdef DEBUG_DISPLAY
+    debugI("Display Power %d", ctn);
 #endif
     psMode = true;
   }

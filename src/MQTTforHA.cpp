@@ -1,11 +1,12 @@
 #include "MQTTforHA.h"
+#include "EvoDebug.h"
 #include <strings.h>
 #include <ArduinoJson.h>
 #include "at8i2cGateway.h"
 
 void MQTTforHA::callback(char* topic, byte* payload, unsigned int length) {
   #ifdef DEBUG_MQTT 
-    debugV("Message arrived [%s] %s\n",topic,payload);
+    debugD("Message arrived [%s] %s\n",topic,payload);
   #endif 
 
   if(strstr(topic,"targetTempCmd") != NULL){
@@ -34,7 +35,7 @@ void MQTTforHA::callback(char* topic, byte* payload, unsigned int length) {
 bool MQTTforHA::reconnect() {
     // Loop until we're reconnected
     #ifdef DEBUG_EVENT
-      debugV("Attempting MQTT connection..[%s:%s@%s:%s]\n",
+      debugD("Attempting MQTT connection..[%s:%s@%s:%s]\n",
       myConfig.get()->mqtt_user,myConfig.get()->mqtt_password,myConfig.get()->mqtt_server,myConfig.get()->mqtt_port);
     #endif
     // Create the client ID
@@ -43,7 +44,7 @@ bool MQTTforHA::reconnect() {
     // Attempt to connect
     if (client.connect(clientId.c_str(),myConfig.get()->mqtt_user,myConfig.get()->mqtt_password)) {
       #ifdef DEBUG_EVENT
-        debugV("connected");
+        debugD("connected");
       #endif
 
       if(!client.publish((String(myConfig.get()->mqtt_topic_prefix) + "/outTopic" ).c_str(), "hello world")){
@@ -125,7 +126,7 @@ bool MQTTforHA::reconnect() {
           strlen(json.c_str()));
       #ifdef DEBUG_MQTT
         } else {
-          debugV("Config MQTT Send successfull!\n");
+          debugD("Config MQTT Send successfull!\n");
       #endif
       }
 
@@ -200,7 +201,7 @@ void MQTTforHA::loopMQTT() {
 void MQTTforHA::sendMQTTAvail(bool online) {
    String topic = String("homeassistant/climate/")+ myConfig.get()->mqtt_client_id;
    #ifdef DEBUG_MQTT
-    debugV("MQTT Available: %s\n",(online?"online":"offline"));
+    debugD("MQTT Available: %s\n",(online?"online":"offline"));
    #endif
    bool c = client.publish((myConfig.get()->mqtt_topic_prefix + topic + String("/available")).c_str(), 
         (online?"online":"offline")
@@ -242,7 +243,7 @@ bool MQTTforHA::sendMQTTState() {
   serializeJson(root,json);
   if(json.compareTo(oldjson) == 0){
      #ifdef DEBUG_MQTT
-      debugV("Skip MQTT status update. Equal JSON\n");
+      debugD("Skip MQTT status update. Equal JSON\n");
      #endif
      return false;
   }
@@ -257,7 +258,7 @@ bool MQTTforHA::sendMQTTState() {
        json.c_str());
     #ifdef DEBUG_MQTT
       } else {
-        debugV("Status MQTT Send successfull!\n");
+        debugD("Status MQTT Send successfull!\n");
     #endif
   }
 

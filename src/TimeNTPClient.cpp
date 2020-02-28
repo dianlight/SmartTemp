@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "TimeNTPClient.h"
+#include "EvoDebug.h"
 #include "Config.h"
 #include <TZ.h>
 #include <sntp.h>                       // sntp_servermode_dhcp()
@@ -24,14 +25,11 @@ void TimeNTPClient::time_is_set_scheduled() {
 
   if (time_machine_running) {
     if (time_machine_days == 0)
-      Serial.printf("---- settimeofday() has been called - possibly from SNTP\n"
-                    "     (starting time machine to show libc's automatic DST handling)\n\n");
+      debugD("settimeofday() has been called - possibly from SNTP (starting time machine to show libc's automatic DST handling)");
     now = time(nullptr);
     const tm* tm = localtime(&now);
-    Serial.printf("future=%3ddays: DST=%s - ",
-                  time_machine_days,
-                  tm->tm_isdst ? "true " : "false");
-    Serial.print(ctime(&now));
+    debugD("future=%3ddays: DST=%s - ctime=%lld",time_machine_days, (tm->tm_isdst ? "true " : "false"),ctime(&now));
+
     gettimeofday(&tv, nullptr);
     constexpr int days = 30;
     time_machine_days += days;

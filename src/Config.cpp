@@ -1,6 +1,7 @@
 #include <EEPROM.h>
 #include <Arduino.h>
 #include "Config.h"
+#include "EvoDebug.h"
 
 static Config::StoreStruct storage;
 static Config::ConfigModeStruct configMode;
@@ -21,7 +22,7 @@ Config::Config() {
       }
     }
   } else {
-    Serial.printf("\nConfig Version UNMATCH '%s' != '%c%c%c'!\n",CONFIG_VERSION, EEPROM.read(0),EEPROM.read(1),EEPROM.read(2));
+    debugW("\nConfig Version UNMATCH '%s' != '%c%c%c'!\n",CONFIG_VERSION, EEPROM.read(0),EEPROM.read(1),EEPROM.read(2));
   }
 }
 

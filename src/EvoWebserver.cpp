@@ -1,18 +1,15 @@
+#include <EvoWebserver.h>
+#include "EvoDebug.h"
 #include <DNSServer.h>
 #include <ESP8266mDNS.h>
 #include <ArduinoJson.h>
 #include <strings.h>
 #include <U8g2lib.h>
-#include "Display.h"
-extern Display display;
 #include <AsyncJson.h>
 
 #include "web_static/web_server_static_files.h"
 
-#define NO_EXTERN_AsyncWebSocket
-#include "Config.h"
-extern Config myConfig;
-#include "Thermostat.h"
+//#define NO_EXTERN_AsyncWebSocket
 
 /**
  * @brief Based on A Beginner's Guide to the ESP8266 -  Pieter P, 08-03-2017 
@@ -20,34 +17,21 @@ extern Config myConfig;
  * 
  */
 
-#include <ESPAsyncWebServer.h>
 
-// SKETCH BEGIN
-AsyncWebServer server(80);
-#ifdef DEBUG_REMOTE
-  AsyncWebSocket ws("/ws");
-#endif
-//AsyncEventSource events("/events");
-
-//ESP8266WebServer server(80);
-//EspHtmlTemplateProcessor templateProcessor(&server);
-
-//LoopbackStream _buffer(9*1024);
-
-void handleDisplayData(AsyncWebServerRequest *request) {
+void EvoWebserver::handleDisplayData(AsyncWebServerRequest *request) {
   AsyncResponseStream *response = request->beginResponseStream("image/x‑portable‑bitmap",10240U);
   display.screeshot(*response);
   request->send(response);
 }
 
-void handleDisplayBmpData(AsyncWebServerRequest *request) {
+void EvoWebserver::handleDisplayBmpData(AsyncWebServerRequest *request) {
   AsyncResponseStream *response = request->beginResponseStream("image/x‑portable‑bitmap");
   response->addHeader("Content-Disposition","attachment; filename=\"screen.pbm\"");
   display.screeshotbmp(*response);
   request->send(response);
 }
 
-void handleLoadData(AsyncWebServerRequest *request){
+void EvoWebserver::handleLoadData(AsyncWebServerRequest *request){
 
     StaticJsonDocument<1024> root;
     root["teco"] = myConfig.get()->targetTemp[0];
@@ -72,7 +56,7 @@ void handleLoadData(AsyncWebServerRequest *request){
     request->send(response);
 }
 
-void handleLoadProgramData(AsyncWebServerRequest *request){
+void EvoWebserver::handleLoadProgramData(AsyncWebServerRequest *request){
   AsyncJsonResponse *response = new AsyncJsonResponse(true,2048U);
   JsonArray program = response->getRoot();
   AsyncWebParameter* day = request->getParam("day");
@@ -83,11 +67,11 @@ void handleLoadProgramData(AsyncWebServerRequest *request){
   request->send(response);
 }
 
-void handleSaveData(AsyncWebServerRequest *request){
-        debugV("Ricevuta chiamata di Save!");
-        debugV("Ricevuti %d parametri",request->args());
+void EvoWebserver::handleSaveData(AsyncWebServerRequest *request){
+        debugI("Ricevuta chiamata di Save!");
+        debugI("Ricevuti %d parametri",request->args());
         for(size_t i=0; i< request->args(); i++){
-            debugV("%s=%s",request->argName(i).c_str(), request->arg(i).c_str());
+            debugI("%s=%s",request->argName(i).c_str(), request->arg(i).c_str());
         }
         myConfig.get()->targetTemp[0] = request->arg("teco").toFloat();
         myConfig.get()->targetTemp[1] = request->arg("tnorm").toFloat();
@@ -112,22 +96,22 @@ void handleSaveData(AsyncWebServerRequest *request){
 
 }
 
-void handleSaveProgramData(AsyncWebServerRequest *request){
-        debugV("Ricevuta chiamata di Save Program!");
-        debugV("Ricevuti %d parametri",request->args());
+void EvoWebserver::handleSaveProgramData(AsyncWebServerRequest *request){
+        debugI("Ricevuta chiamata di Save Program!");
+        debugI("Ricevuti %d parametri",request->args());
         for(size_t i=0; i< request->args(); i++){
             if(request->argName(i).startsWith("plain"))continue;
-            debugV("%s=%s",request->argName(i).c_str(), request->arg(i).c_str());
+            debugI("%s=%s",request->argName(i).c_str(), request->arg(i).c_str());
             u8_t day = atoi(&request->argName(i).c_str()[4]);
-            debugV("Working on day %d '%s'",day,request->arg(i).c_str());
+            debugI("Working on day %d '%s'",day,request->arg(i).c_str());
             StaticJsonDocument<1536> doc;
             DeserializationError err = deserializeJson(doc, request->arg(i).c_str());
             if (err) {
-              debugV("deserializeJson() failed with code: %s ",err.c_str());
+              debugI("deserializeJson() failed with code: %s ",err.c_str());
               request->send(500,err.c_str());
             } else {
               for(u8_t hq=0; hq < 24*4; hq++){
-                debugV("day:%d hq:%d = %d",day,hq,doc[hq].as<u8_t>());
+                debugI("day:%d hq:%d = %d",day,hq,doc[hq].as<u8_t>());
                 myConfig.get()->weekProgram[day].hourQuarterHolds[hq]=doc[hq].as<u8_t>();
               }
             }
@@ -146,9 +130,9 @@ void handleSaveProgramData(AsyncWebServerRequest *request){
 //  return "&#x1F534;" + key + "&#x1F534;";
 //}
 
-bool handleFileRead(AsyncWebServerRequest *request){  // send the right file to the client (if it exists)
+bool EvoWebserver::handleFileRead(AsyncWebServerRequest *request){  // send the right file to the client (if it exists)
   String path = request->url();
-  debugV("handleFileRead: %s",path.c_str());
+  debugD("handleFileRead: %s",path.c_str());
   if(path.endsWith("/")) path += "index.html";           // If a folder is requested, send the index file
   for(byte i=0; i < STATIC_FILES_SIZE; i++){
     if(staticFiles[i].filename == path || staticFiles[i].filename == path+".gz"){
@@ -159,27 +143,27 @@ bool handleFileRead(AsyncWebServerRequest *request){  // send the right file to 
     } 
   }
 
-  debugV("File Not Found: %s",path.c_str());
+  debugW("File Not Found: %s",path.c_str());
   return false;                                          // If the file doesn't exist, return false
 }
 
-void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
+void EvoWebserver::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
   if(type == WS_EVT_CONNECT){
-    Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
+    debugD("ws[%s][%u] connect\n", server->url(), client->id());
     client->printf("Hello Client %u :)", client->id());
     client->ping();
   } else if(type == WS_EVT_DISCONNECT){
-    Serial.printf("ws[%s][%u] disconnect\n", server->url(), client->id());
+    debugD("ws[%s][%u] disconnect\n", server->url(), client->id());
   } else if(type == WS_EVT_ERROR){
-    Serial.printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+    debugD("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
   } else if(type == WS_EVT_PONG){
-    Serial.printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
+    debugD("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
   } else if(type == WS_EVT_DATA){
     AwsFrameInfo * info = (AwsFrameInfo*)arg;
     String msg = "";
     if(info->final && info->index == 0 && info->len == len){
       //the whole message is in a single frame and we got all of it's data
-      Serial.printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
+      debugD("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
 
       if(info->opcode == WS_TEXT){
         for(size_t i=0; i < info->len; i++) {
@@ -192,7 +176,7 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
           msg += buff ;
         }
       }
-      Serial.printf("%s\n",msg.c_str());
+      debugD("%s\n",msg.c_str());
 
       if(info->opcode == WS_TEXT)
         client->text("I got your text message");
@@ -202,11 +186,11 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
       //message is comprised of multiple frames or the frame is split into multiple packets
       if(info->index == 0){
         if(info->num == 0)
-          Serial.printf("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
-        Serial.printf("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
+          debugD("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
+        debugD("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
       }
 
-      Serial.printf("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT)?"text":"binary", info->index, info->index + len);
+      debugD("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT)?"text":"binary", info->index, info->index + len);
 
       if(info->opcode == WS_TEXT){
         for(size_t i=0; i < len; i++) {
@@ -219,12 +203,12 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
           msg += buff ;
         }
       }
-      Serial.printf("%s\n",msg.c_str());
+      debugD("%s\n",msg.c_str());
 
       if((info->index + len) == info->len){
-        Serial.printf("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
+        debugD("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
         if(info->final){
-          Serial.printf("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
+          debugD("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
           if(info->message_opcode == WS_TEXT)
             client->text("I got your text message");
           else
@@ -236,44 +220,43 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
 }
 
 
-
-void setupWebServer(){
+EvoWebserver::EvoWebserver(Display &display, Config &myConfig): display(display), myConfig(myConfig){
 
     MDNS.addService("http", "tcp", 80);   // Web server
 
-//    SPIFFS.begin();                           // Start the SPI Flash Files System
-
-//    server.serveStatic("/", SPIFFS, "/")
-//      .setDefaultFile("index.html")
-//      .setTemplateProcessor(indexKeyProcessor);
-
-    server.on("/load",HTTP_GET, handleLoadData);
-    server.on("/save",HTTP_POST, handleSaveData);
-    server.on("/loadP",HTTP_GET, handleLoadProgramData);
-    server.on("/saveP",HTTP_POST, handleSaveProgramData);
-    server.on("/screen",HTTP_GET, handleDisplayData);
-    server.on("/screenpbm",HTTP_GET, handleDisplayBmpData);
+    server.on("/load",HTTP_GET,std::bind(&EvoWebserver::handleLoadData,this,std::placeholders::_1));
+    server.on("/save",HTTP_POST, std::bind(&EvoWebserver::handleSaveData,this,std::placeholders::_1));
+    server.on("/loadP",HTTP_GET, std::bind(&EvoWebserver::handleLoadProgramData,this,std::placeholders::_1));
+    server.on("/saveP",HTTP_POST, std::bind(&EvoWebserver::handleSaveProgramData,this,std::placeholders::_1));
+    server.on("/screen",HTTP_GET, std::bind(&EvoWebserver::handleDisplayData,this,std::placeholders::_1));
+    server.on("/screenpbm",HTTP_GET, std::bind(&EvoWebserver::handleDisplayBmpData,this,std::placeholders::_1));
    
-    server.onNotFound([](AsyncWebServerRequest *request) {                              // If the client requests any URI
+    server.onNotFound([this](AsyncWebServerRequest *request) {                              // If the client requests any URI
         if (!handleFileRead(request))                  // send it if it exists
-        request->send(404, "text/plain", "404: Not Found"); // otherwise, respond with a 404 (Not Found) error
+          request->send(404, "text/plain", "404: Not Found"); // otherwise, respond with a 404 (Not Found) error
     });
 
-    #ifdef DEBUG_REMOTE
-      ws.onEvent(onWsEvent);
+    #ifdef EVODEBUG_REMOTE
+      ws.onEvent(std::bind(&EvoWebserver::onWsEvent,this,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5,std::placeholders::_6));
       server.addHandler(&ws);
+      EvoAppender* webserverAppender =new WebsocketEvoAppender(ws);
+      evoDebug.addEvoAppender(webserverAppender);
     #endif
-
-    server.begin();                           // Actually start the server
-    debugV("HTTP server started");
 }
 
-void stopWebServer(){
+void EvoWebserver::stop(){
+    webServerTicker.detach();
     server.end();
-//    SPIFFS.end();
+    debugI("HTTP server stopped");
+}
+
+void EvoWebserver::start(){
+    server.begin();
+    webServerTicker.attach_ms_scheduled(300,std::bind(&EvoWebserver::loopWebServer,this));
+    debugI("HTTP server started");
 }
 
 
-void loopWebServer(){
+void EvoWebserver::loopWebServer(){
   ws.cleanupClients();
 }

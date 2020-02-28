@@ -19,6 +19,8 @@ class OTA {
         OTA(Display &display);
         void addOtaCallback(OtpEvent otaEventCallback){ callbacks.push_back(otaEventCallback); };
 
+        void start();
+        void stop();
     
     private:
         Display &display;
@@ -29,7 +31,7 @@ class OTA {
 
         String type;
 
-        bool loopOTA();
+        void loopOTA();
         void onStart();
         void onEnd();
         void onProgress(unsigned int progress, unsigned int total);

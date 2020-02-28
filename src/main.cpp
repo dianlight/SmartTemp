@@ -3,7 +3,7 @@
  * 
  * Smart Thermostat
  */
-
+#include "EvoDebug.h"
 #include <ESP8266mDNS.h>
 #include <Wire.h>
 #include <ArduinoOTA.h>
@@ -18,8 +18,8 @@
 #include "TimeNTPClient.h"
 #include "I2CDebug.h"
 #include "Thermostat.h"
-#include "Webserver.h"
-#include <PubSubClient.h>
+#include "EvoWebserver.h"
+//#include <PubSubClient.h>
 
 Config myConfig;
 
@@ -27,17 +27,16 @@ AT8I2CGATEWAY at8gw(AT8_I2C_GW);
 
 Thermostat thermostat(myConfig);
              
-OTA *ota;
-
 MQTTforHA *mQTTforHA;
 
 TimeNTPClient timeNTPClient = TimeNTPClient();
 
 Display display(thermostat, myConfig, at8gw,timeNTPClient);
 
-// Base structure data:
-//bool heating = false;
-//float curTemp = 20.4f;
+OTA ota(display);
+
+EvoWebserver evoWebserver(display,myConfig);
+
 float curHumidity = 80.9f;
 
 static bool _inOTA = false;
@@ -46,35 +45,40 @@ WiFiEventHandler stationConnectedHandler;
 
 void onStationModeGotIP(const WiFiEventStationModeGotIP& evt) {
 
+  debugI("IP %s/%s gw %s",evt.ip.toString().c_str(),evt.mask.toString().c_str(),evt.gw.toString().c_str());
+
   display.bootConnectedDisplay();
 
-  //setupNTP();
+  debugD("Display OK..");
 
-  ota = new OTA(display);
-  ota->addOtaCallback([](OTA::OTA_EVENT event){
+  ota.addOtaCallback([](OTA::OTA_EVENT event){
     switch (event)
     {
     case OTA::OTA_EVENT::START/* constant-expression */:
       _inOTA = true;
+      evoWebserver.stop();
       break;
     case OTA::OTA_EVENT::STOP/* constant-expression */:
     case OTA::OTA_EVENT::ERROR/* constant-expression */:
       _inOTA = false;
+      evoWebserver.start();
       break;
     }
   });
+  ota.start();
+
+  debugD("OTA OK..");
 
 
-//    setupOTA();
- 
-//  setupMQTT();
   mQTTforHA = new MQTTforHA(thermostat,myConfig,at8gw);
   display.setMQTTforHA(mQTTforHA);
 
-  setupWebServer();
+  debugD("MQTT OK..");
 
+  evoWebserver.start();
+
+  debugD("EvoWenserver OK..");
 }
-
 
 
 void setup()
@@ -102,7 +106,7 @@ void setup()
 
   thermostat.setHeatingCallback([](bool isHeating){
     #ifdef DEBUG_EVENT
-      debugV("Relay %s %f > %f",isHeating?"On":"Off",curTemp,TARGET_TEMP);
+      debugD("Relay %s %f > %f",isHeating?"On":"Off",thermostat.getCurrentTemp(),thermostat.getCurrentTarget());
     #endif
     at8gw.setRelay(isHeating);
     if (WiFi.status() == WL_CONNECTED){
@@ -117,19 +121,10 @@ void setup()
 void loop()
 {
   display.loopDisplay();
-//  if(!loopOTA()){
   if(!_inOTA){
       at8gw.i2cReader();
       curHumidity = at8gw.getHumidity();
       thermostat.setCurrentTemp(at8gw.getTemperature() + FIXED_TEMP_CORRECTION);
-//      heating = at8gw.getRelay();
-
-      if (WiFi.status() == WL_CONNECTED){
-          networkLoop();
-//          loopMQTT();
-          loopWebServer();
-//          loopNTP();
-      }
   }
 }
 
