@@ -18,7 +18,7 @@
 
 //extern PubSubClient client;
 //extern bool heating;
-extern float curHumidity;
+//extern float curHumidity;
 #define MAX_DEPTH 2
 
 static time_t lastAction;
@@ -61,6 +61,7 @@ Display::Display() {
   _u8g2.setFont(fontName);
   lastAction = millis();
   sleepModeTicker.attach_scheduled(myConfig.get()->displaySleep / 3, std::bind(&Display::sleepModeDisplay, this));
+  displayRefreshTicker.attach_ms_scheduled(100,std::bind(&Display::loopDisplay,this));
 
   _u8g2.firstPage();
   do
@@ -199,7 +200,7 @@ void Display::loopDisplay()
       _u8g2.printf("%2.1f\xB0\x43", thermostat.getCurrentTarget());
     }
     _u8g2.setCursor(48 + 10, 10);
-    _u8g2.printf("%2.0f%%", curHumidity);
+    _u8g2.printf("%2.0f%%", at8gw.getHumidity());
 
     _u8g2.setFont(u8g2_font_open_iconic_thing_1x_t);
     _u8g2.drawGlyph(48, 10, 0x48);
@@ -231,7 +232,7 @@ void Display::loopDisplay()
     {
       _u8g2.setFont(u8g2_font_profont29_tr);
       _u8g2.setCursor(26, 40);
-      _u8g2.printf("%2.1f", thermostat.getCurrentTemp());
+      _u8g2.printf("%2.1f", at8gw.getTemperature());
       _u8g2.setFont(u8g2_font_5x7_mf);
       _u8g2.drawGlyph(90, 44 - 22, 'o');
       _u8g2.setFont(fontName);

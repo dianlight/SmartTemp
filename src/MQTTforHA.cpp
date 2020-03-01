@@ -235,7 +235,7 @@ bool MQTTforHA::sendMQTTState() {
   if(!myConfig.get()->away){
     root["hold"] = CURRENT_HOLD_MQTT;
   }
-  root["current_temp"] = round(thermostat.getCurrentTemp()*10)/10;
+  root["current_temp"] = round(at8gw.getTemperature()*10)/10;
   root["current_action"] = CURRENT_ACTION_MQTT;
 
   String json;

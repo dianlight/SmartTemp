@@ -1,5 +1,6 @@
 #include "Thermostat.h"
 #include "EvoDebug.h"
+#include "at8i2cGateway.h"
 
 
 Thermostat::Thermostat() {
@@ -21,14 +22,14 @@ void Thermostat::_loopThermostat(){
         // Controllo Switch!
         if(_curTemp - myConfig.get()->tempPrecision < getCurrentTarget()){
             #ifdef DEBUG_EVENT
-                debugD("Relay On %f < %f",getCurrentTemp() - myConfig.get()->tempPrecision,getCurrentTarget());
+                debugD("Relay On %f < %f",at8gw.getTemperature() - myConfig.get()->tempPrecision,getCurrentTarget());
             #endif
             if(_heatingCallback != NULL)
                 _heatingCallback(true);
             _switchLastTime = millis();
         } else if(_curTemp + myConfig.get()->tempPrecision > getCurrentTarget()) {
             #ifdef DEBUG_EVENT
-                debugD("Relay Off %f > %f",getCurrentTemp() - myConfig.get()->tempPrecision,getCurrentTarget());
+                debugD("Relay Off %f > %f",at8gw.getTemperature() - myConfig.get()->tempPrecision,getCurrentTarget());
             #endif
             if(_heatingCallback != NULL)
                 _heatingCallback(false);

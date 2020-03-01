@@ -30,19 +30,19 @@ class Display {
 
 //        void screeshot(Print &p);
         void screeshotbmp(Print &p);
-        void loopDisplay();
 
     private:
         typedef byte u8g2_Bitmap[U8_Height][U8_Width];
 
         U8G2 _u8g2;
         
-        Ticker sleepModeTicker;
+        Ticker sleepModeTicker,displayRefreshTicker;
 
         int8_t lastEncPosition =0;
 
         void sleepModeDisplay();
 
+        void loopDisplay();
 };
 
 extern Display display;

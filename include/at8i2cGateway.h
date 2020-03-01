@@ -1,6 +1,6 @@
 #pragma once
 
-//#include <Ticker.h>
+#include <Ticker.h>
 #include "EvoStartableInterface.h"
 
 
@@ -13,7 +13,6 @@ class AT8I2CGATEWAY: public EvoStopable {
         byte    getEncoderButton();
         bool    getRelay();
         void    setRelay(bool on);
-        void    i2cReader();
 
         bool start();
         bool stop();
@@ -55,6 +54,10 @@ class AT8I2CGATEWAY: public EvoStopable {
 
         int _i2caddress;
         I2C_Packet_t indata;
+
+        Ticker at8gwTicker;
+
+        void    i2cReader();
 };
 
 extern AT8I2CGATEWAY at8gw;

@@ -32,8 +32,6 @@ class Thermostat {
         float getCurrentTarget();
 
         /** Getter and Setter **/
-        void  setCurrentTemp(float curTemp){_curTemp=curTemp;}
-        float getCurrentTemp(){ return _curTemp;}
         void  setHold(Config::HOLDS hold);
         byte  getHold(){return CURRENT_HOLD;}
 

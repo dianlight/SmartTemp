@@ -19,12 +19,7 @@
 #include "Thermostat.h"
 #include "EvoWebserver.h"
 #include "MQTTforHA.h"
-
              
-float curHumidity = 80.9f;
-
-static bool _inOTA = false;
-
 WiFiEventHandler stationConnectedHandler,stationModeDisconnectedHandler;
 
 void onStationModeGotIP(const WiFiEventStationModeGotIP& evt) {
@@ -36,12 +31,12 @@ void onStationModeGotIP(const WiFiEventStationModeGotIP& evt) {
     switch (event)
     {
     case OTA::OTA_EVENT::START/* constant-expression */:
-      _inOTA = true;
       evoWebserver.stop();
+      at8gw.stop();
       break;
     case OTA::OTA_EVENT::STOP/* constant-expression */:
     case OTA::OTA_EVENT::ERROR/* constant-expression */:
-      _inOTA = false;
+      at8gw.start();
       evoWebserver.start();
       break;
     }
@@ -76,7 +71,7 @@ void setup()
     scanI2C();
   #endif
 
-  at8gw.i2cReader();
+  at8gw.start();
   delay(500);
 
   if(at8gw.getEncoderButton() == AT8I2CGATEWAY::CLICK_CODE::HELD){
@@ -87,11 +82,9 @@ void setup()
       evoWifi.doAPConnect();
   }
 
-//  delay(500);
-
   thermostat.setHeatingCallback([](bool isHeating){
     #ifdef DEBUG_EVENT
-      debugD("Relay %s %f > %f",isHeating?"On":"Off",thermostat.getCurrentTemp(),thermostat.getCurrentTarget());
+      debugD("Relay %s %f > %f",isHeating?"On":"Off",at8gw.getTemperature(),at8gw.getTemperature());
     #endif
     at8gw.setRelay(isHeating);
     if (WiFi.status() == WL_CONNECTED){
@@ -103,13 +96,6 @@ void setup()
 
 }   
 
-void loop()
-{
-  display.loopDisplay();
-  if(!_inOTA){
-      at8gw.i2cReader();
-      curHumidity = at8gw.getHumidity();
-      thermostat.setCurrentTemp(at8gw.getTemperature() + FIXED_TEMP_CORRECTION);
-  }
+void loop(){
 }
 

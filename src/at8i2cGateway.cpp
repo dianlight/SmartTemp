@@ -14,7 +14,7 @@ float AT8I2CGATEWAY::getHumidity() {
 }
 
 float AT8I2CGATEWAY::getTemperature() {
-    return indata.sensorData.in.temperature;
+    return indata.sensorData.in.temperature + FIXED_TEMP_CORRECTION;
 }
 
 int8_t AT8I2CGATEWAY::getEncoder(){
@@ -63,8 +63,14 @@ void AT8I2CGATEWAY::i2cReader(){
 }
 
 // TODO: Im plement start and stop functions
-bool AT8I2CGATEWAY::start(){return true;}
-bool AT8I2CGATEWAY::stop(){return false;}
+bool AT8I2CGATEWAY::start(){
+    at8gwTicker.attach_ms_scheduled(200,std::bind(&AT8I2CGATEWAY::i2cReader,this));
+    return true;
+}
+bool AT8I2CGATEWAY::stop(){
+    at8gwTicker.detach();
+    return false;
+}
 
 
 AT8I2CGATEWAY at8gw(AT8_I2C_GW);
