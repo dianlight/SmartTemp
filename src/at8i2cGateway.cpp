@@ -61,3 +61,10 @@ void AT8I2CGATEWAY::i2cReader(){
         }
     }
 }
+
+// TODO: Im plement start and stop functions
+bool AT8I2CGATEWAY::start(){return true;}
+bool AT8I2CGATEWAY::stop(){return false;}
+
+
+AT8I2CGATEWAY at8gw(AT8_I2C_GW);

@@ -2,7 +2,7 @@
 #include "EvoDebug.h"
 
 
-Thermostat::Thermostat(Config &myConfig): myConfig(myConfig) {
+Thermostat::Thermostat() {
     _loopTicker.attach_scheduled(5,std::bind(&Thermostat::_loopThermostat, this));
 }
     
@@ -69,4 +69,6 @@ float Thermostat::getCurrentTarget(){
                 myConfig.get()->away?myConfig.get()->awayModify:0 
             ));
 }
+
+Thermostat thermostat;
         

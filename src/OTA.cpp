@@ -4,6 +4,8 @@
 #include <ESP8266mDNS.h>
 #include <functional>
 #include "Config.h"
+#include "Display.h"
+
 
 
 //static bool inOTA = false;
@@ -11,7 +13,7 @@
 // FIXME: Migrate do debug* macro
 
 
-OTA::OTA(Display &display): display(display) {
+OTA::OTA() {
     // OTA
   debugD("OTA Subsystem start!");
 
@@ -94,13 +96,20 @@ void OTA::processCallbacks(OTA_EVENT event){
         (*it)(event);
 }
 
-void OTA::start(){
+bool OTA::start(){
   MDNS.end();
   MDNS.begin(ArduinoOTA.getHostname().c_str());
   MDNS.enableArduino(8266);  
   checkOTATicker.attach_ms_scheduled(150,std::bind(&OTA::loopOTA,this));
+  _running = true;
+  return _running;
 }
 
-void OTA::stop(){
+bool OTA::stop(){
   checkOTATicker.detach();
+  _running = false;
+  return _running;
 }
+
+OTA ota = OTA();
+

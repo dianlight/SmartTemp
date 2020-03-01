@@ -1,8 +1,12 @@
+#include <Arduino.h>
 #include "Display.h"
 #include <ESP8266WiFi.h>
 #include "EvoDebug.h"
 #include <Wire.h>
 
+#include "at8i2cGateway.h"  
+#include "Thermostat.h"
+#include "Config.h"
 #include "TimeNTPClient.h"
 
 //#define fontName u8g2_font_profont10_tf
@@ -45,11 +49,7 @@ void Display::sleepModeDisplay()
   }
 }
 
-Display::Display(Thermostat &thermostat, Config &myConfig, AT8I2CGATEWAY &at8gw, TimeNTPClient &timeNTPClient) : thermostat(thermostat),
-                                                                                                             myConfig(myConfig),
-                                                                                                             at8gw(at8gw),
-                                                                                                             timeNTPClient(timeNTPClient)
-{
+Display::Display() {
 
   //U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // pin remapping with ESP8266 HW I2C
   //U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);
@@ -170,7 +170,7 @@ void Display::loopDisplay()
       _u8g2.drawGlyph(128 - 17, 10, 0x4E);
     }
 
-    if (_mqttforHA != NULL && _mqttforHA->state() == 0)
+    if (mQTTforHA.state() == 0)
     {
       _u8g2.setFont(u8g2_font_open_iconic_thing_1x_t);
       _u8g2.drawGlyph(128 - 28, 10, 0x46);
@@ -433,19 +433,22 @@ void Display::displayProgress(u8 perc, String type)
   } while (_u8g2.nextPage());
 }
 
-//u8g2_Bitmap _buffer;
 static Print *u8g2_print_for_screenshot;
 
+/*
 void u8g2_print_callback(const char *s)
 {
   u8g2_print_for_screenshot->print(s);
 }
+*/
 
+/*
 void Display::screeshot(Print &p)
 {
   u8g2_print_for_screenshot = &p;
   u8g2_WriteBufferPBM(_u8g2.getU8g2(), u8g2_print_callback);
 }
+*/
 
 static u8_t u8g2_print_for_screenshot_row, u8g2_print_for_screenshot_bit;
 
@@ -498,3 +501,5 @@ void Display::screeshotbmp(Print &p)
   u8g2_print_for_screenshot_bit = 0;
   u8g2_WriteBufferPBM(_u8g2.getU8g2(), u8g2_print_bmp_callback);
 }
+
+Display display = Display();

@@ -19,10 +19,10 @@
 //    #define DEBUG_I2C_SCAN
 //    #define DEBUG_I2C_IN
 //    #define DEBUG_I2C_OUT
-    #define DEBUG_DISPLAY
-    #define DEBUG_MQTT
+//    #define DEBUG_DISPLAY
+//    #define DEBUG_MQTT
     #define DEBUG_EVENT
-    #define DEBUG_WEBSERVER
+//    #define DEBUG_WEBSERVER
 #endif
 
 #include <time.h>
@@ -173,5 +173,6 @@ class Config {
         ConfigModeStruct *getMode();
 };
 
+extern Config myConfig;
 
 

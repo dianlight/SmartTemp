@@ -7,11 +7,12 @@
 
 <body>
     <header class="sticky">
-        <a id="homeTab" href="#" class="logo" onclick="show('home')">{{ titleize(argv.env.DEFINE_SMT_HOST) }}</a>
-        <a id="programTab" href="#" class="button" onclick="show('program')">Program</a>
-        <a id="configTab" href="#" class="button" onclick="show('config')">Config</a>
+        <a id="homeTab" href="#" class="logo" onclick="show('home')"><span class="icon-home"></span><span class="hidden-sm">{{ titleize(argv.env.DEFINE_SMT_HOST) }}</span></a>
+        <a id="programTab" href="#" class="button" onclick="show('program')"><span class="icon-calendar"></span><span class="hidden-sm">Program</span></a>
+        <a id="configTab" href="#" class="button" onclick="show('config')"><span class="icon-edit"></span><span class="hidden-sm">Config</span></a>
+        <a id="wifiConfigTab" href="#" class="button" onclick="show('wificonfig')"><span class="icon-share"></span><span class="hidden-sm">Wifi Config</span></a>
         <!-- #ifdef DEBUG_REMOTE -->
-        <a id="debugTab" href="#" class="button" onclick="show('debug')">Debug</a>
+        <a id="debugTab" href="#" class="button" onclick="show('debug')"><span class="icon-info"></span><span class="hidden-sm">Debug</span></a>
         <!-- #endif -->
     </header>
 
@@ -90,6 +91,49 @@
         </div>
 
     </div>
+
+    <div id="wificonfig" class="panel">
+        <form id="wifiConfigForm">
+            <fieldset name="WiFi">
+                <legend>WiFi</legend>
+                <div id="wifiScanSpinner" class="row" style="display: none;"><div class="spinner"></div></div>
+                <div id="wifiScanResult" class="row cols-sm-12" style="display: none;">
+                    <table class="striped hoverable">
+                        <thead>
+                            <tr class="hidden-sm">
+                                <th>SSID</th>
+                                <th>Stength</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wifiScanTable">
+                            <tr>
+                                <td data-label="SSID">LTOfficeNet</td>
+                                <td data-Label="Strength">50%</td>
+                                <td data-label="Type"><span class="icon-lock"></span></td>
+                            </tr>
+                            <tr>
+                                <td data-label="SSID">LTOfficeNet</td>
+                                <td data-Label="Strength">50%</td>
+                                <td data-label="Type"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12 col-md-6">
+                        <label class="hidden-sm" for="ssid">SSID</label>
+                        <input type="text" id="ssid" name="ssid" placeholder="SSID" onchange="validateWifi()" /><a id="wifiScanButton" href="#" class="button tertiary small"><span onclick="scanWifi()" class="icon-search"></span></a>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <label class="hidden-sm" for="wkey">Password</label>
+                        <input type="password" id="wkey" name="wkey" placeholder="Password" onchange="validateWifi()" oninput="validateWifi()"/>
+                    </div>
+                </div>
+            </fieldset>
+        </form>
+    </div>    
+
     <div id="config" class="panel">
         <form id="configForm">
             <fieldset name="Targets">
@@ -204,7 +248,7 @@
 
     <footer class="sticky">
         <div class="row">
-            <div class="col-sm-12 col-md-10 col-sm-last">
+            <div class="col-sm-12 col-md-10 col-sm-last hidden-sm">
                 <p>Version: {{ argv.env.DEFINE_SMT_VERSION }}
                     <!-- {{ argv }} -->
                     -{{ process.env.npm_package_version }}
@@ -217,6 +261,30 @@
                 <div id="saveButtons" class="button-group">
                     <button class="primary" onclick="save()">Save</button>
                     <button class="secondary" onclick="reload()">Cancel</button>
+                </div>
+                <div id="connectButtons" class="button-group">
+                   <!-- <button id="wifiConnectButton" class="primary" onclick="connect()" disabled>Connect</button> -->
+                   <label for="modal-control-connect" onclick="connect()" class="button primary">Connect</label>
+                   <input type="checkbox" id="modal-control-connect" class="modal">
+                   <div>
+                       <div class="card">
+                           <!-- <label for="modal-control" class="modal-close" ></label> -->
+                           <h3 class="section">Wifi</h3>
+                           <p class="section">Connecting to WiFi..</p>
+                           <div class="spinner primary"></div>
+                       </div>
+                   </div>
+                   <!-- <button class="secondary" >WPS</button> -->
+                    <label for="modal-control-wps" onclick="wps()" class="button tertiary">WPS</label>
+                    <input type="checkbox" id="modal-control-wps" class="modal">
+                    <div>
+                        <div class="card">
+                            <!-- <label for="modal-control" class="modal-close" ></label> -->
+                            <h3 class="section">WPS</h3>
+                            <p class="section">Press WPS button on your router..</p>
+                            <div class="spinner tertiary"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

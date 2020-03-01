@@ -3,6 +3,11 @@
 #include <strings.h>
 #include <ArduinoJson.h>
 #include "at8i2cGateway.h"
+#include "Thermostat.h"
+#include "Config.h"
+#include "at8i2cGateway.h"
+#include "TimeNTPClient.h"
+
 
 void MQTTforHA::callback(char* topic, byte* payload, unsigned int length) {
   #ifdef DEBUG_MQTT 
@@ -42,6 +47,7 @@ bool MQTTforHA::reconnect() {
     String clientId = String(myConfig.get()->mqtt_client_id) + "-";
     clientId += String(ESP.getChipId(), HEX);
     // Attempt to connect
+    debugD("MQTT %s [%s:%s]",clientId.c_str(),myConfig.get()->mqtt_user,myConfig.get()->mqtt_password);
     if (client.connect(clientId.c_str(),myConfig.get()->mqtt_user,myConfig.get()->mqtt_password)) {
       #ifdef DEBUG_EVENT
         debugD("connected");
@@ -180,14 +186,7 @@ bool MQTTforHA::reconnect() {
     }
 }
 
-MQTTforHA::MQTTforHA(Thermostat &thermostat,Config &myConfig, AT8I2CGATEWAY &at8gw): thermostat(thermostat),
- myConfig(myConfig), 
- at8gw(at8gw),
- client(espClient) 
- {
-  client.setServer(myConfig.get()->mqtt_server, atoi(myConfig.get()->mqtt_port));
-  client.setCallback(std::bind(&MQTTforHA::callback,this,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
-  mqttTicker.attach_ms_scheduled(250,std::bind(&MQTTforHA::loopMQTT,this));
+MQTTforHA::MQTTforHA(){
 }
 
 void MQTTforHA::loopMQTT() {
@@ -265,5 +264,23 @@ bool MQTTforHA::sendMQTTState() {
   return true;
 
 }
+
+bool MQTTforHA::start(){
+   debugI("MQTT setting are: %s:%d",myConfig.get()->mqtt_server, atoi(myConfig.get()->mqtt_port));
+   client.setServer(myConfig.get()->mqtt_server, atoi(myConfig.get()->mqtt_port));
+   client.setCallback(std::bind(&MQTTforHA::callback,this,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
+   mqttTicker.attach_ms_scheduled(250,std::bind(&MQTTforHA::loopMQTT,this));
+   _running = true;
+   return true;
+}
+bool MQTTforHA::stop(){ 
+  _running = false;
+  mqttTicker.detach();
+  return false;
+}
+
+MQTTforHA mQTTforHA = MQTTforHA();
+
+
 
 

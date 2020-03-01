@@ -6,23 +6,19 @@
 #include <strings.h>
 #include <U8g2lib.h>
 #include <AsyncJson.h>
+#include "Display.h"
+#include "Config.h"
+
 
 #include "web_static/web_server_static_files.h"
 
-//#define NO_EXTERN_AsyncWebSocket
-
-/**
- * @brief Based on A Beginner's Guide to the ESP8266 -  Pieter P, 08-03-2017 
- * https://tttapa.github.io/ESP8266/Chap01%20-%20ESP8266.html
- * 
- */
-
-
+/*
 void EvoWebserver::handleDisplayData(AsyncWebServerRequest *request) {
   AsyncResponseStream *response = request->beginResponseStream("image/x‑portable‑bitmap",10240U);
   display.screeshot(*response);
   request->send(response);
 }
+*/
 
 void EvoWebserver::handleDisplayBmpData(AsyncWebServerRequest *request) {
   AsyncResponseStream *response = request->beginResponseStream("image/x‑portable‑bitmap");
@@ -121,18 +117,88 @@ void EvoWebserver::handleSaveProgramData(AsyncWebServerRequest *request){
         request->send(204);
 }
 
-//String indexKeyProcessor(const String& key)
-//{
-//  if (key == "VERSION") return _SMT_VERSION "." CONFIG_VERSION;
-//  else if (key == "CURRENT_MODE") return CURRENT_MODE_STR;
-//  else if (key == "COPYRIGHT") return COPYRIGHT;
-//
-//  return "&#x1F534;" + key + "&#x1F534;";
-//}
+void EvoWebserver::handleOstatData(AsyncWebServerRequest *request){
+    StaticJsonDocument<100> root;
+    if(WiFi.getMode() != WIFI_STA){
+      root["otab"] = "wificonfig";
+    } else {
+      #ifdef EVODEBUG_REMOTE
+        root["otab"] = "debug";
+      #else 
+        root["otab"] = "home";
+      #endif
+      //root["bdg"] = "";
+    }
+
+    AsyncResponseStream *response = request->beginResponseStream("application/json");
+    serializeJson(root,*response);
+    request->send(response);
+}
+
+void EvoWebserver::handleLoadWifiData(AsyncWebServerRequest *request){
+    StaticJsonDocument<87> root;
+    root["ssid"] = WiFi.SSID();
+    root["wkey"] = "*Secret*";
+
+    AsyncResponseStream *response = request->beginResponseStream("application/json");
+    serializeJson(root,*response);
+    request->send(response);
+}
+
+void EvoWebserver::sendScanResult(int networksFound){
+  Serial.printf("%d network(s) found\n", networksFound);
+  for (int i = 0; i < networksFound; i++)
+  {
+    debugD("%d: %s, Ch:%d (%ddBm) %s\n", i + 1, WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i), WiFi.encryptionType(i) == ENC_TYPE_NONE ? "open" : "");
+    StaticJsonDocument<115> root;
+    root["i"] = i;
+    root["ssid"] = WiFi.SSID(i);
+    root["dBm"] = WiFi.RSSI(i); // Less is better!
+    root["open"] = (WiFi.encryptionType(i) == wl_enc_type::ENC_TYPE_NONE);
+    char buffer[124];
+    serializeJson(root,buffer);
+    debugD("Send WiFi Info: %s",buffer);
+    wsScan.printfAll(buffer);
+  }
+  wsScan.printfAll("{\"end\":true}");
+}
+
+void EvoWebserver::handleScanWifiData(AsyncWebServerRequest *request){
+  debugD("Ricevuta richiesta di ScanWifi");
+  WiFi.scanNetworksAsync(std::bind(&EvoWebserver::sendScanResult,this,std::placeholders::_1),false);
+  request->send(204);
+}
+
+void EvoWebserver::handleSaveWifiData(AsyncWebServerRequest *request){
+  debugI("Ricevuta chiamata di WifiSave!");
+  debugI("Ricevuti %d parametri",request->args());
+  for(size_t i=0; i< request->args(); i++){
+      debugI("%s=%s",request->argName(i).c_str(), request->arg(i).c_str());
+  }
+  WiFi.persistent(true);
+  bool ok = WiFi.begin(request->arg("ssid"),request->arg("wkey"));
+  debugD("Connessone %s -> AP %s ",ok?"SUCCESS":"FAIL",request->arg("ssid").c_str());
+  if(ok){
+    WiFi.mode(WIFI_STA);
+    WiFi.setAutoConnect(true);
+    WiFi.setAutoReconnect(true);
+  }
+
+  request->send(204);
+}
+
+void EvoWebserver::handleWPSData(AsyncWebServerRequest *request){
+  debugI("Ricevuta chiamata di WPS!");
+
+  WiFi.beginWPSConfig();
+
+  request->send(204);
+}
+
 
 bool EvoWebserver::handleFileRead(AsyncWebServerRequest *request){  // send the right file to the client (if it exists)
   String path = request->url();
-  debugD("handleFileRead: %s",path.c_str());
+  debugD("handleFileRead: %s %s",path.c_str(),request->host().c_str());
   if(path.endsWith("/")) path += "index.html";           // If a folder is requested, send the index file
   for(byte i=0; i < STATIC_FILES_SIZE; i++){
     if(staticFiles[i].filename == path || staticFiles[i].filename == path+".gz"){
@@ -144,6 +210,13 @@ bool EvoWebserver::handleFileRead(AsyncWebServerRequest *request){  // send the 
   }
 
   debugW("File Not Found: %s",path.c_str());
+  if(WiFi.getMode() == WiFiMode::WIFI_AP_STA){
+    debugI("AP mode. Captive portal on. Redirect to config page...");
+    AsyncWebServerResponse *response = request->beginResponse(302,"text/plain");
+    response->addHeader("Location", String("http://") + WiFi.softAPIP().toString());
+    request->send(response);
+    return true;
+  }
   return false;                                          // If the file doesn't exist, return false
 }
 
@@ -220,15 +293,20 @@ void EvoWebserver::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * cli
 }
 
 
-EvoWebserver::EvoWebserver(Display &display, Config &myConfig): display(display), myConfig(myConfig){
+EvoWebserver::EvoWebserver(){
 
     MDNS.addService("http", "tcp", 80);   // Web server
 
+    server.on("/ostat",HTTP_GET,std::bind(&EvoWebserver::handleOstatData,this,std::placeholders::_1));
     server.on("/load",HTTP_GET,std::bind(&EvoWebserver::handleLoadData,this,std::placeholders::_1));
     server.on("/save",HTTP_POST, std::bind(&EvoWebserver::handleSaveData,this,std::placeholders::_1));
     server.on("/loadP",HTTP_GET, std::bind(&EvoWebserver::handleLoadProgramData,this,std::placeholders::_1));
     server.on("/saveP",HTTP_POST, std::bind(&EvoWebserver::handleSaveProgramData,this,std::placeholders::_1));
-    server.on("/screen",HTTP_GET, std::bind(&EvoWebserver::handleDisplayData,this,std::placeholders::_1));
+    server.on("/loadW",HTTP_GET, std::bind(&EvoWebserver::handleLoadWifiData,this,std::placeholders::_1));
+    server.on("/scanW",HTTP_GET, std::bind(&EvoWebserver::handleScanWifiData,this,std::placeholders::_1));
+    server.on("/saveW",HTTP_POST, std::bind(&EvoWebserver::handleSaveWifiData,this,std::placeholders::_1));
+    server.on("/wps",HTTP_GET, std::bind(&EvoWebserver::handleWPSData,this,std::placeholders::_1));
+//    server.on("/screen",HTTP_GET, std::bind(&EvoWebserver::handleDisplayData,this,std::placeholders::_1));
     server.on("/screenpbm",HTTP_GET, std::bind(&EvoWebserver::handleDisplayBmpData,this,std::placeholders::_1));
    
     server.onNotFound([this](AsyncWebServerRequest *request) {                              // If the client requests any URI
@@ -236,27 +314,37 @@ EvoWebserver::EvoWebserver(Display &display, Config &myConfig): display(display)
           request->send(404, "text/plain", "404: Not Found"); // otherwise, respond with a 404 (Not Found) error
     });
 
+    wsScan.onEvent(std::bind(&EvoWebserver::onWsEvent,this,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5,std::placeholders::_6));
+    server.addHandler(&wsScan);
+
     #ifdef EVODEBUG_REMOTE
-      ws.onEvent(std::bind(&EvoWebserver::onWsEvent,this,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5,std::placeholders::_6));
-      server.addHandler(&ws);
-      EvoAppender* webserverAppender =new WebsocketEvoAppender(ws);
+      wsLog.onEvent(std::bind(&EvoWebserver::onWsEvent,this,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5,std::placeholders::_6));
+      server.addHandler(&wsLog);
+      EvoAppender* webserverAppender =new WebsocketEvoAppender(wsLog);
       evoDebug.addEvoAppender(webserverAppender);
     #endif
 }
 
-void EvoWebserver::stop(){
+bool EvoWebserver::stop(){
     webServerTicker.detach();
     server.end();
+    _running = false;
     debugI("HTTP server stopped");
+    return _running;
 }
 
-void EvoWebserver::start(){
+bool EvoWebserver::start(){
     server.begin();
     webServerTicker.attach_ms_scheduled(300,std::bind(&EvoWebserver::loopWebServer,this));
+    _running = true;
     debugI("HTTP server started");
+    return _running;
 }
 
 
 void EvoWebserver::loopWebServer(){
-  ws.cleanupClients();
+  wsLog.cleanupClients();
+  wsScan.cleanupClients();
 }
+
+EvoWebserver evoWebserver = EvoWebserver();

@@ -11,3 +11,5 @@ class TimeNTPClient {
     private:
         void time_is_set_scheduled();
 };
+
+extern TimeNTPClient timeNTPClient;

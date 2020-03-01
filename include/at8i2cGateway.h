@@ -1,9 +1,10 @@
 #pragma once
 
 //#include <Ticker.h>
+#include "EvoStartableInterface.h"
 
 
-class AT8I2CGATEWAY {
+class AT8I2CGATEWAY: public EvoStopable {
     public:
         AT8I2CGATEWAY(int i2caddress);
         float   getHumidity();
@@ -13,6 +14,10 @@ class AT8I2CGATEWAY {
         bool    getRelay();
         void    setRelay(bool on);
         void    i2cReader();
+
+        bool start();
+        bool stop();
+
         enum CLICK_CODE {
                  OPEN = 0,
                  CLOSED = 1,
@@ -51,3 +56,5 @@ class AT8I2CGATEWAY {
         int _i2caddress;
         I2C_Packet_t indata;
 };
+
+extern AT8I2CGATEWAY at8gw;

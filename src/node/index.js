@@ -7,7 +7,7 @@ import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
-import "chibijs"
+import $ from "cash-dom";
 import populate from "populate.js"
 
 const CPROG = ['eco','normal','confort'];
@@ -17,56 +17,102 @@ let displayTimeout;
 let currentPanel = "home";
 
 function reload(){
-    $().ajax("load","GET",function(data,status){
-        console.log(status,data);
-        let jdata = JSON.parse(data);
-        populate($("#configForm")[0],jdata);
-        $("#saveButtons").show();
-    });
+  fetch("load")
+    .then(response => response.json())
+    .then(jdata => {
+      populate($("#configForm")[0],jdata);
+      $("#saveButtons").show();
+    })
+    .catch(err => console.error(err));
 }
 window.reload = reload;
 
+function reloadWifi(){
+  fetch("loadW")
+    .then(response => response.json())
+    .then(jdata => {
+      populate($("#wifiConfigForm")[0],jdata);
+      $("#connectButtons").show();
+  })
+  .catch(err => console.error(err));
+}
+
+function scanWifi(){
+  $("#wifiScanButton").hide();
+  $("#wifiScanResult").hide();
+  $("#wifiScanTable").html("");
+  $("#wifiScanSpinner").show();
+  fetch("scanW")
+  .then(response => response.json())  
+  .then(jdata => {
+    console.log(jdata);
+  })
+  .catch(err => console.error(err));
+}
+
+window.scanWifi = scanWifi;
+
+function validateWifi(){
+//  console.log("Validate! ",$("#ssid").val() !== "" ,$("#wkey").val() !== "");
+  if( $("#ssid").val() !== "" && $("#wkey").val() !== ""){
+    $("#wifiConnectButton").removeAttr("disabled");
+  } else {
+    $("#wifiConnectButton").attr("disabled","disabled");
+  }
+}
+window.validateWifi = validateWifi;
 
 function reloadProgram(index = 0){
       if(index == 7){
         $("#saveButtons").show();
       } else {
-        $().ajax("loadP?day="+index,"GET",function(data,status){
-          console.log(status,data);
-          let jdata = JSON.parse(data);
+        fetch("loadP?day="+index)
+        .then(response => response.json())  
+        .then(jdata => {
+          console.log(jdata);
           $("#"+DAY_NAMES[index]).html("");
           for(let h=0,hq=0; h < 24; h++,hq+=4){
             $("#"+DAY_NAMES[index])
-              .htmlAppend("<sup>"+h+"</sup>")
-              .htmlAppend("<div id='C"+index+"_"+hq+"' onclick='change("+index+","+hq+");' class=\""+CPROG[jdata[hq]]+"\"></div>")
-              .htmlAppend("<div id='C"+index+"_"+(hq+1)+"' onclick='change("+index+","+(hq+1)+");' class=\""+CPROG[jdata[hq+1]]+"\"></div>")
-              .htmlAppend("<div id='C"+index+"_"+(hq+2)+"' onclick='change("+index+","+(hq+2)+");' class=\""+CPROG[jdata[hq+2]]+"\"></div>")
-              .htmlAppend("<div id='C"+index+"_"+(hq+3)+"' onclick='change("+index+","+(hq+3)+");' class=\""+CPROG[jdata[hq+3]]+"\"></div>");
+              .append("<sup>"+h+"</sup>")
+              .append("<div id='C"+index+"_"+hq+"' onclick='change("+index+","+hq+");' class=\""+CPROG[jdata[hq]]+"\"></div>")
+              .append("<div id='C"+index+"_"+(hq+1)+"' onclick='change("+index+","+(hq+1)+");' class=\""+CPROG[jdata[hq+1]]+"\"></div>")
+              .append("<div id='C"+index+"_"+(hq+2)+"' onclick='change("+index+","+(hq+2)+");' class=\""+CPROG[jdata[hq+2]]+"\"></div>")
+              .append("<div id='C"+index+"_"+(hq+3)+"' onclick='change("+index+","+(hq+3)+");' class=\""+CPROG[jdata[hq+3]]+"\"></div>");
           }
           reloadProgram(index+1);
-        });
+        })
+        .catch(err => console.error(err));
       }
 }
 window.reload = reloadProgram;
 
-function saveConfig(){
-  $("#configForm").ajax("save","POST",function(data,status){
-    reload();
+async function saveConfig(){
+  console.log($("#configForm")[0]);
+  const data = new URLSearchParams(new FormData($("#configForm")[0]));
+  console.log(data);
+  await fetch("save",{
+    method: 'POST',
+    body: data
   });
+  reload();
 }
 
-function saveProgram(){
+async function saveProgram(){
   ['mon','tue','wed','thu','fri','sat','sun'].forEach(function(d,index,allarray){
     let json = new Array();
     for(let hq=0; hq < 24*4; hq++){
-      json[hq]=CPROG.indexOf($("#C"+index+"_"+hq+"").removeClass("unsaved").getClass());
+      json[hq]=CPROG.indexOf($("#C"+index+"_"+hq+"").removeClass("unsaved").attr("class"));
     }
     $("#d"+d).val(JSON.stringify(json));
   });
 
-  $("#programForm").ajax("saveP","POST",function(data,status){
-    reloadProgram();
+  const data = new URLSearchParams(new FormData($("#programForm")[0]));
+  await fetch("saveP",{
+    method: 'POST',
+    body: data
   });
+
+  reloadProgram();
 }
 
 function save(){
@@ -82,12 +128,12 @@ window.save = save;
 
 function change(day,hq){
   $("#C"+day+"_"+hq).removeClass("unsaved");
-  let cls = $("#C"+day+"_"+hq).getClass();
+  let cls = $("#C"+day+"_"+hq).attr("class");
   let p = CPROG.indexOf(cls);
   console.log("Letto",cls,p,CPROG);
   p = (p+1) % 3;
   console.log(p, CPROG[p]);
-  $("#C"+day+"_"+hq).setClass(CPROG[p]+" unsaved");
+  $("#C"+day+"_"+hq).attr("class",CPROG[p]+" unsaved");
 }
 
 window.change = change;
@@ -98,6 +144,7 @@ function show(what){
   $(".panel").hide();
   $('header a').removeClass('bordered');
   $("#saveButtons").hide();
+  $("#connectButtons").hide();
   currentPanel=what;
   if(currentPanel == "home"){
     refreshDisplayFromMap();
@@ -107,6 +154,9 @@ function show(what){
   } else if(currentPanel == "config"){
     clearTimeout(displayTimeout);
     reload();
+  } else if(currentPanel == "wificonfig"){
+    clearTimeout(displayTimeout);
+    reloadWifi();
   } else if(currentPanel == "debug"){
     clearTimeout(displayTimeout);
     term.scrollToBottom();
@@ -115,6 +165,25 @@ function show(what){
   $("#"+what).show();
 }
 window.show = show;
+
+async function wps(){
+  console.log("WPS!");
+  await fetch("wps");
+  location.reload(true);
+}
+window.wps = wps;
+
+async function connect(){
+  console.log($("#wifiConfigForm")[0]);
+  const data = new URLSearchParams(new FormData($("#wifiConfigForm")[0]));
+  console.log(data);
+  await fetch("saveW",{
+    method: 'POST',
+    body: data
+  });
+  location.reload(true);
+}
+window.connect = connect;
 
 function refreshDisplayFromMap(){
   var oReq = new XMLHttpRequest();
@@ -177,12 +246,19 @@ $().ready(function(){
   term.writeln('Console \x1B[1;3;31mconnecting...\x1B[0m');
 
   // StartPage
-
-//  show("home");
-  show("debug");
-
+  fetch("ostat")
+    .then(response => response.json())
+    .then(data => {
+      console.log(data,"First tab",data.otab);
+      show(data.otab);
+      if(data.bdg){
+        alert(data.bdg);
+      }
+    })
+    .catch( err => console.error(err));
+  
   // WebSockets
-  var debug_service = new ReconnectingWebSocket('ws://'+window.location.host+'/ws');
+  var debug_service = new ReconnectingWebSocket('ws://'+window.location.host+'/log');
   debug_service.onmessage = function(event){
    // console.log("Messaggio",event);
     term.writeln(event.data);
@@ -198,4 +274,48 @@ $().ready(function(){
   debug_service.onerror = function(){
     term.writeln('\x1B[1;3;31mError!\x1B[0m');
   }
+  
+
+  var scan_service = new ReconnectingWebSocket('ws://'+window.location.host+'/scan');
+  scan_service.onmessage = function(event){
+    let item = JSON.parse(event.data);
+    console.log("Got Scan Result",event.data);
+    $("#wifiScanSpinner").hide();
+    if(item.end){
+      $("#wifiScanButton").show();
+      validateWifi();
+    } else {
+      // Search networks
+//      console.log($("#wifiScanTable tr td[data-ssid='"+item.ssid+"'][data-label='SSID']"));
+      if($("#wifiScanTable tr td[data-ssid='"+item.ssid+"'][data-label='SSID']").length != 0){
+        console.log("Duplicate Network",item);
+        let str = $("#wifiScanTable tr td[data-ssid='"+item.ssid+"'][data-label='Strength']");
+        str.text(str.text()+"/"+item.dBm+"dBm");
+      } else {
+        let html = "<tr id=\"netw"+item.i+"\">";
+        html+="<td data-label=\"SSID\" data-ssid=\""+item.ssid+"\">"+item.ssid+"</td>";
+        html+="<td data-Label=\"Strength\" data-ssid=\""+item.ssid+"\">"+item.dBm+"dBm</td>";
+        html+="<td data-label=\"Type\" data-ssid=\""+item.ssid+"\">"+(item.open?"":"<span class=\"icon-lock\"></span>")+"</td>";
+        html+="</tr>";
+        $("#wifiScanTable").append(html);
+        $("#netw"+item.i).on( 'click', event => {
+          console.log(item.ssid);
+          $("#ssid").val(item.ssid)[0].scrollIntoView();
+          $("#wkey")[0].focus();
+        });
+        $("#wifiScanResult").show();
+        }
+    }
+  }
+  scan_service.onopen = function(event){
+    console.log("Connect WS /scan",event);
+    scan_service.send("CSL2");
+  }
+  scan_service.onclose = function(){
+    console.log("Disconect WS /scan");
+  }
+  scan_service.onerror = function(){
+    console.log("Error WS /scan");
+  }
+   
 });

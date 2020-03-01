@@ -2,11 +2,11 @@
 #include <Ticker.h>
 #include <list> 
 #include <ArduinoOTA.h>
+#include "EvoStartableInterface.h"
 
-#include "Display.h"
 
 
-class OTA {
+class OTA: public EvoStopable {
     public:
         enum __attribute__((__packed__)) OTA_EVENT {
             START,
@@ -16,15 +16,13 @@ class OTA {
 
         typedef void (*OtpEvent)(OTA_EVENT event);
 
-        OTA(Display &display);
+        OTA();
         void addOtaCallback(OtpEvent otaEventCallback){ callbacks.push_back(otaEventCallback); };
 
-        void start();
-        void stop();
+        bool start();
+        bool stop();
     
     private:
-        Display &display;
-
         Ticker checkOTATicker;
 
         std::list<OtpEvent> callbacks;
@@ -40,3 +38,5 @@ class OTA {
         void processCallbacks(OTA_EVENT event);
 
 };
+
+extern OTA ota;

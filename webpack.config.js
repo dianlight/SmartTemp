@@ -92,8 +92,12 @@ var config = {
     contentBase: path.join(__dirname, 'data'),
     compress: true,
     proxy: {
-      '/ws':{
+      '/log':{
         target: 'ws://localhost:9001',
+        ws: true
+      },
+      '/scan':{
+        target: 'ws://localhost:9002',
         ws: true
       }
     },
@@ -102,15 +106,32 @@ var config = {
       //      var bodyParser = require('body-parser');
       //      app.use(bodyParser.json());
       // console.log(server);
-      var WebSocketServer = require("ws").Server;
-      var wss = new WebSocketServer({port: 9001});
-      wss.on("connection", function(ws){
+      var WebSocket = require("ws");
+      var wsl = new WebSocket.Server({port: 9001});
+      wsl.on("connection", function(ws){
       //  console.log("Connesso WS",ws,ws._socket.server);
         ws.on('message', function(msg) {
           console.log("--> %s",msg);
           ws.send(msg);
         });
         ws.send('hello!');
+      });
+
+      var wss = new WebSocket.Server({port: 9002});
+      wss.on("connection", function(ws){
+      //  console.log("Connesso WS Scan",ws,ws._socket.server);
+      //  ws.on('message', function(msg) {
+      //    console.log("--> %s",msg);
+      //    ws.send(msg);
+      //  });
+      //  ws.send('hello!');
+      });
+
+      app.get('/ostat', function (req, res) {
+        res.json({ 
+          "otab": "wificonfig", 
+          "bdg": "Wifi not configured"
+        });
       });
 
       app.get('/load', function (req, res) {
@@ -133,15 +154,50 @@ var config = {
           "tprefix": "",
         });
       });
+      app.get('/loadW', function (req, res) {
+        res.json({ 
+          "ssid": "MySuperNetwork", 
+          "wkey": "*SuperSecret*"
+        });
+      });
+
+      app.get('/scanW', async function (req, res) {
+        setTimeout(()=>{
+          for(let i=0; i < Math.round(Math.random()*5);i++){
+            let data = JSON.stringify(
+              {
+                "ssid":"Network"+Math.round(Math.random()*3),
+                "dBm": Math.round(Math.random()*-100),
+                "open": Boolean(Math.round(Math.random()))
+              });
+              wss.clients.forEach(function each(client) {
+                if (client.readyState === WebSocket.OPEN) {
+                  client.send(data);
+                }
+              }
+            );
+          }
+          wss.clients.forEach(function each(client) {
+            if (client.readyState === WebSocket.OPEN) {
+              client.send("{\"end\":true}");
+            }
+          });
+        },1000);
+        res.json({});
+      });
+
+
       app.get('/loadP', function (req, res) {
         res.json([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
       });
-      app.get("/screen", function(req,res){
-        res.sendFile(path.join(__dirname, 'test/screen'+(read++ % 2)+'.pbm'));
-      });
+//      app.get("/screen", function(req,res){
+//        res.sendFile(path.join(__dirname, 'test/screen'+(read++ % 2)+'.pbm'));
+//      });
       app.get("/screenpbm", function(req,res){
         res.sendFile(path.join(__dirname, 'test/screenpbm'+(read++ % 2)+'.pbm'));
       });
+
+      // Post functions
       
     }
   }

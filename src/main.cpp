@@ -10,47 +10,28 @@
 #include <WiFiUdp.h>
 
 #include "Config.h"
-#include "Network.h"
+#include "EvoWifi.h"
 #include "Display.h"
 #include "OTA.h"
 #include "at8i2cGateway.h"
-#include "MQTTforHA.h"
 #include "TimeNTPClient.h"
 #include "I2CDebug.h"
 #include "Thermostat.h"
 #include "EvoWebserver.h"
-//#include <PubSubClient.h>
+#include "MQTTforHA.h"
 
-Config myConfig;
-
-AT8I2CGATEWAY at8gw(AT8_I2C_GW);
-
-Thermostat thermostat(myConfig);
              
-MQTTforHA *mQTTforHA;
-
-TimeNTPClient timeNTPClient = TimeNTPClient();
-
-Display display(thermostat, myConfig, at8gw,timeNTPClient);
-
-OTA ota(display);
-
-EvoWebserver evoWebserver(display,myConfig);
-
 float curHumidity = 80.9f;
 
 static bool _inOTA = false;
 
-WiFiEventHandler stationConnectedHandler;
+WiFiEventHandler stationConnectedHandler,stationModeDisconnectedHandler;
 
 void onStationModeGotIP(const WiFiEventStationModeGotIP& evt) {
 
   debugI("IP %s/%s gw %s",evt.ip.toString().c_str(),evt.mask.toString().c_str(),evt.gw.toString().c_str());
 
   display.bootConnectedDisplay();
-
-  debugD("Display OK..");
-
   ota.addOtaCallback([](OTA::OTA_EVENT event){
     switch (event)
     {
@@ -67,30 +48,28 @@ void onStationModeGotIP(const WiFiEventStationModeGotIP& evt) {
   });
   ota.start();
 
-  debugD("OTA OK..");
-
-
-  mQTTforHA = new MQTTforHA(thermostat,myConfig,at8gw);
-  display.setMQTTforHA(mQTTforHA);
-
-  debugD("MQTT OK..");
+  mQTTforHA.start();
 
   evoWebserver.start();
-
-  debugD("EvoWenserver OK..");
 }
 
+void onStationModeDisconnected(const WiFiEventStationModeDisconnected& evt ){
+  debugI("Station Mode disconnected!");
+
+  ota.stop();
+  mQTTforHA.stop();
+}
 
 void setup()
 {
+  stationConnectedHandler = WiFi.onStationModeGotIP(&onStationModeGotIP);
+  stationModeDisconnectedHandler = WiFi.onStationModeDisconnected(&onStationModeDisconnected);
+
   Wire.begin();
 
-  Serial.begin(115200);
-  while(!Serial);
+  Serial.begin(74880);
 
-  myConfig = Config();
-
-  stationConnectedHandler = WiFi.onStationModeGotIP(&onStationModeGotIP);
+  //myConfig = Config();
 
   #ifdef DEBUG_I2C_SCAN
     delay(500);
@@ -100,9 +79,15 @@ void setup()
   at8gw.i2cReader();
   delay(500);
 
-  setupWifi(at8gw.getEncoderButton() == AT8I2CGATEWAY::CLICK_CODE::HELD); 
+  if(at8gw.getEncoderButton() == AT8I2CGATEWAY::CLICK_CODE::HELD){
+    debugD("AP config portal requested!");
+    evoWifi.doAPConnect();
+  } else if(!evoWifi.doSTAConnect()){
+      debugW("Unable to connet to WiFi. Start in AP mode");
+      evoWifi.doAPConnect();
+  }
 
-  delay(500);
+//  delay(500);
 
   thermostat.setHeatingCallback([](bool isHeating){
     #ifdef DEBUG_EVENT
@@ -110,8 +95,8 @@ void setup()
     #endif
     at8gw.setRelay(isHeating);
     if (WiFi.status() == WL_CONNECTED){
-      if(mQTTforHA->sendMQTTState()){
-         mQTTforHA->sendMQTTAvail(true);
+      if(mQTTforHA.isRunning() && mQTTforHA.sendMQTTState()){
+         mQTTforHA.sendMQTTAvail(true);
       }
     } 
   });

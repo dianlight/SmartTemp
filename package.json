@@ -1,6 +1,6 @@
 {
   "name": "smarttemp",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "HtmlData for smartTemp",
   "main": "src/node/index.js",
   "directories": {
@@ -44,7 +44,7 @@
     "ws": "^7.2.1"
   },
   "dependencies": {
-    "chibijs": "^3.0.9",
+    "cash-dom": "^6.0.2",
     "mini.css": "^3.0.1",
     "path-svg": "^0.2.1",
     "populate.js": "^1.1.0",

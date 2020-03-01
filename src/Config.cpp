@@ -1,6 +1,6 @@
+#include "Config.h"
 #include <EEPROM.h>
 #include <Arduino.h>
-#include "Config.h"
 #include "EvoDebug.h"
 
 static Config::StoreStruct storage;
@@ -40,4 +40,4 @@ Config::ConfigModeStruct *Config::getMode() {
   return &configMode;
 }
 
-
+Config myConfig = Config();

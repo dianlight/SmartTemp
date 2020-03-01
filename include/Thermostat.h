@@ -24,7 +24,7 @@ class Thermostat {
     public:
         typedef void (*HeatingCallback)(bool isHeating);
 
-        Thermostat(Config &myConfig);
+        Thermostat();
 
         void setHeatingCallback(HeatingCallback heatingCallback);
         void setMode(Config::MODES mode);
@@ -38,7 +38,6 @@ class Thermostat {
         byte  getHold(){return CURRENT_HOLD;}
 
     private:
-        Config &myConfig;    
         HeatingCallback _heatingCallback = NULL;
         unsigned long _switchLastTime, _manualTime;
         Ticker _loopTicker;
@@ -48,3 +47,5 @@ class Thermostat {
         void _loopThermostat();
 
 };
+
+extern Thermostat thermostat;

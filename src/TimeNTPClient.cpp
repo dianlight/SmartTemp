@@ -62,3 +62,4 @@ tm* TimeNTPClient::getNTPTime(){
     return localtime(&now);
 }
 
+TimeNTPClient timeNTPClient = TimeNTPClient();

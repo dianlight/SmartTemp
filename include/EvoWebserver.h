@@ -1,32 +1,35 @@
 #pragma once
-#include "EvoWebserver.h"
 #include "EvoDebug.h"
 #include <Ticker.h>
 #include <ESPAsyncWebServer.h>
+#include "EvoStartableInterface.h"
 
-#include "Display.h"
-#include "Config.h"
 
-class EvoWebserver {
+class EvoWebserver: public EvoStopable {
     public:
-        EvoWebserver(Display &display, Config &myConfig);
-        void start();
-        void stop();
+        EvoWebserver();
+        
+        bool start();
+        bool stop();
 
     private:
-        Display &display;
-        Config &myConfig;
 
         Ticker webServerTicker;
         AsyncWebServer server{80};
         #ifdef EVODEBUG_REMOTE
-            AsyncWebSocket ws{"/ws"};
+            AsyncWebSocket wsLog{"/log"};
         #endif
+        AsyncWebSocket wsScan{"/scan"};
         //AsyncEventSource events{"/events"};
 
         void loopWebServer();
 
-        void handleDisplayData(AsyncWebServerRequest *request);
+        void handleOstatData(AsyncWebServerRequest *request);
+        void handleLoadWifiData(AsyncWebServerRequest *request);
+        void handleScanWifiData(AsyncWebServerRequest *request);
+        void handleSaveWifiData(AsyncWebServerRequest *request);
+        void handleWPSData(AsyncWebServerRequest *request);
+//        void handleDisplayData(AsyncWebServerRequest *request);
         void handleDisplayBmpData(AsyncWebServerRequest *request);
         void handleLoadData(AsyncWebServerRequest *request);
         void handleLoadProgramData(AsyncWebServerRequest *request);
@@ -34,6 +37,8 @@ class EvoWebserver {
         void handleSaveProgramData(AsyncWebServerRequest *request);
         bool handleFileRead(AsyncWebServerRequest *request);
         void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
+
+        void sendScanResult(int networksFound);
 
 };
 
@@ -58,3 +63,5 @@ class EvoWebserver {
                 AsyncWebSocket &ws;
         };
  #endif
+
+ extern EvoWebserver evoWebserver;
