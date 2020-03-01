@@ -8,7 +8,7 @@
 class EvoWebserver: public EvoStopable {
     public:
         EvoWebserver();
-        
+
         bool start();
         bool stop();
 
@@ -55,8 +55,14 @@ class EvoWebserver: public EvoStopable {
                     ws.printfAll("///// WebsocketEvoAppender stop  /////");
                 }
 
-                void displayMessage(LEVEL level,const char *fname,const char *mname,uint line, char* message){
-                    ws.printfAll(message);
+                size_t write(uint8_t c){
+                    ws.textAll(&c,1);
+                    return 1;
+                }
+
+                size_t write(const uint8_t *buffer, size_t size){
+                    ws.textAll((char *)buffer,size);
+                    return size;
                 }
             
             private:

@@ -15,8 +15,8 @@
  */
 
 #ifdef EVODEBUG
-    #define EVOD_MAX_PRINTF_LEN 256
-    class EvoAppender {
+    #define EVOD_CHUNCK_LEN 256
+    class EvoAppender: public Print {
         public:
             enum __attribute__((__packed__)) LEVEL {
                 DEBUG,
@@ -25,9 +25,28 @@
                 ERROR
             };
 
-             virtual void begin() = 0;
-             virtual void end() = 0;
-             virtual void displayMessage(LEVEL level,const char *fname,const char *mname,uint line, char* message) = 0;
+            virtual void begin() = 0;
+            virtual void end() = 0;
+            virtual size_t write(uint8_t) = 0;
+            virtual size_t write(const uint8_t *buffer, size_t size) = 0;
+
+            size_t vprintf(const char *format, va_list arg) {
+                    char temp[64];
+                    char* buffer = temp;
+                    size_t len = vsnprintf(temp, sizeof(temp), format, arg);
+                    if (len > sizeof(temp) - 1) {
+                        buffer = new char[len + 1];
+                        if (!buffer) {
+                            return 0;
+                        }
+                        vsnprintf(buffer, len + 1, format, arg);
+                    }
+                    len = write((const uint8_t*) buffer, len);
+                    if (buffer != temp) {
+                        delete[] buffer;
+                    }
+                    return len;
+            }
     };
 
     #ifdef EVODEBUG_SERIAL 
@@ -36,13 +55,15 @@
                 void begin(){
                     Serial.println("SerialEvoAppender start");
                 }
-
                 void end(){
                     Serial.println("SerialEvoAppender stop");
                 }
+                size_t write(uint8_t c){
+                    return Serial.write(c);
+                }
 
-                void displayMessage(LEVEL level,const char *fname,const char *mname,uint line, char* message){
-                    Serial.println(message);
+                size_t write(const uint8_t *buffer, size_t size){
+                    return Serial.write(buffer,size);
                 }
         };
     #endif
@@ -84,13 +105,12 @@
             u8 p;
             std::list<EvoAppender*> :: iterator it; 
                 for(it = appenders.begin(),p=0; it != appenders.end(); ++it,++p) { 
-                    char* temp = new char[EVOD_MAX_PRINTF_LEN];
-                    size_t lenh = snprintf(temp, EVOD_MAX_PRINTF_LEN, "[%s] {%s@%s|%d} ", LEVEL_NAME[level], functionName, fileName,line); 
+                    (*it)->printf("[%s] %s ",LEVEL_NAME[level],functionName);
                     va_start(args,fmt);
-                    vsnprintf(&temp[lenh], EVOD_MAX_PRINTF_LEN - lenh, fmt, args);
-                    va_end(args);    
-                    (*it)->displayMessage(level,fileName, functionName, line, temp);
-                    delete[] temp;
+                    (*it)->vprintf(fmt,args);
+                    va_end(args);
+                    (*it)->printf(" [%s:%d]",fileName,line);
+                    (*it)->println();
                 }
         }
     }; 

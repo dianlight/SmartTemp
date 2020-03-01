@@ -43,10 +43,10 @@ function scanWifi(){
   $("#wifiScanTable").html("");
   $("#wifiScanSpinner").show();
   fetch("scanW")
-  .then(response => response.json())  
-  .then(jdata => {
-    console.log(jdata);
-  })
+//  .then(response => response.json())  
+//  .then(jdata => {
+//    console.log(jdata);
+//  })
   .catch(err => console.error(err));
 }
 
@@ -261,7 +261,7 @@ $().ready(function(){
   var debug_service = new ReconnectingWebSocket('ws://'+window.location.host+'/log');
   debug_service.onmessage = function(event){
    // console.log("Messaggio",event);
-    term.writeln(event.data);
+    term.write(event.data);
   }
   debug_service.onopen = function(event){
    // console.log(event);
