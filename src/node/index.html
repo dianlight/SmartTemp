@@ -23,10 +23,35 @@
                     <canvas id="screen" height="64" width="128" class="mirror"></canvas>
                 </div>
             </div>
+            <!-- // New UI project
             <div class="col-sm col-md-4 col-lg-3">
                 <div class="card fluid">
                     <div class="section dark">
-                        <h4>Controls</h4>
+                        <span class="icon-home"></span>
+                        <span class="icon-home inverse"></span>
+                        <span class="icon-alert"></span>
+                        <span class="icon-calendar"></span>
+                        <span class="icon-calendar inverse"></span>
+                    </div>
+                    <div class="temperature-container">
+                        <div class="temperature-indicator">20.9&deg;</div>
+                    </div>
+                    <div class="temp-pick">
+                        <div class="cel">&deg;C</div>
+                        <div class="fah">&deg;F</div>
+                    </div>
+                    <div class="button-container">
+                        <button class="decrease">&minus;</button>
+                        <button class="increase">&plus;</button>
+                    </div>
+                    <div class="auto-mode">Auto-Mode</div>
+                </div>
+            </div>
+        -->
+            <div class="col-sm col-md-4 col-lg-3">
+                <div class="card fluid">
+                    <div class="section dark">
+                        Controls
                     </div>
                     <div class="section">
                         <div class="button-group">
@@ -47,7 +72,7 @@
     <div id="program" class="panel container">
         <div class="card fluid">
             <div class="section dark">
-                <h3>Week program</h3>
+                Week program
             </div>
             <div class="section plist noselect">
                 <div class="row">
@@ -80,13 +105,13 @@
                 </div>
             </div>
             <form id="programForm" class="hidden">
-                <input type="hidden" id="dmon" name="day_0" value=""/>
-                <input type="hidden" id="dtue" name="day_1" value=""/>
-                <input type="hidden" id="dwed" name="day_2" value=""/>
-                <input type="hidden" id="dthu" name="day_3" value=""/>
-                <input type="hidden" id="dfri" name="day_4" value=""/>
-                <input type="hidden" id="dsat" name="day_5" value=""/>
-                <input type="hidden" id="dsun" name="day_6" value=""/>
+                <input type="hidden" id="dmon" name="day_0" value="" />
+                <input type="hidden" id="dtue" name="day_1" value="" />
+                <input type="hidden" id="dwed" name="day_2" value="" />
+                <input type="hidden" id="dthu" name="day_3" value="" />
+                <input type="hidden" id="dfri" name="day_4" value="" />
+                <input type="hidden" id="dsat" name="day_5" value="" />
+                <input type="hidden" id="dsun" name="day_6" value="" />
             </form>
         </div>
 
@@ -96,7 +121,9 @@
         <form id="wifiConfigForm">
             <fieldset name="WiFi">
                 <legend>WiFi</legend>
-                <div id="wifiScanSpinner" class="row" style="display: none;"><div class="spinner"></div></div>
+                <div id="wifiScanSpinner" class="row" style="display: none;">
+                    <div class="spinner"></div>
+                </div>
                 <div id="wifiScanResult" class="row cols-sm-12" style="display: none;">
                     <table class="striped hoverable">
                         <thead>
@@ -127,12 +154,12 @@
                     </div>
                     <div class="col-sm-12 col-md-6">
                         <label class="hidden-sm" for="wkey">Password</label>
-                        <input type="password" id="wkey" name="wkey" placeholder="Password" onchange="validateWifi()" oninput="validateWifi()"/>
+                        <input type="password" id="wkey" name="wkey" placeholder="Password" onchange="validateWifi()" oninput="validateWifi()" />
                     </div>
                 </div>
             </fieldset>
         </form>
-    </div>    
+    </div>
 
     <div id="config" class="panel">
         <form id="configForm">
@@ -158,8 +185,7 @@
                 <div class="row">
                     <div class="col-sm-12 col-md-6">
                         <label for="aautotimeout">Manual to Auto return time</label>
-                        <input type="text" id="aautotimeout" name="aautotimeout" placeholder="" /> sec (0 = newer
-                        return)
+                        <input type="text" id="aautotimeout" name="aautotimeout" placeholder="" /> sec (0 = newer return)
                     </div>
                 </div>
                 <div class="row">
@@ -253,8 +279,8 @@
                     <!-- {{ argv }} -->
                     -{{ process.env.npm_package_version }}
                     <!--            -->
-                    ({{ process.env.npm_package_gitHead }}) &#xA9; {{ process.env.npm_package_author_name }} 
-                     <!--           -->
+                    ({{ process.env.npm_package_gitHead }}) &#xA9; {{ process.env.npm_package_author_name }}
+                    <!--           -->
                     // {{ process.env.npm_package_license }}</p>
             </div>
             <div class="col-sm-12 col-md-2 col-md-last">
@@ -263,18 +289,18 @@
                     <button class="secondary" onclick="reload()">Cancel</button>
                 </div>
                 <div id="connectButtons" class="button-group">
-                   <!-- <button id="wifiConnectButton" class="primary" onclick="connect()" disabled>Connect</button> -->
-                   <label for="modal-control-connect" onclick="connect()" class="button primary">Connect</label>
-                   <input type="checkbox" id="modal-control-connect" class="modal">
-                   <div>
-                       <div class="card">
-                           <!-- <label for="modal-control" class="modal-close" ></label> -->
-                           <h3 class="section">Wifi</h3>
-                           <p class="section">Connecting to WiFi..</p>
-                           <div class="spinner primary"></div>
-                       </div>
-                   </div>
-                   <!-- <button class="secondary" >WPS</button> -->
+                    <!-- <button id="wifiConnectButton" class="primary" onclick="connect()" disabled>Connect</button> -->
+                    <label for="modal-control-connect" onclick="connect()" class="button primary">Connect</label>
+                    <input type="checkbox" id="modal-control-connect" class="modal">
+                    <div>
+                        <div class="card">
+                            <!-- <label for="modal-control" class="modal-close" ></label> -->
+                            <h3 class="section">Wifi</h3>
+                            <p class="section">Connecting to WiFi..</p>
+                            <div class="spinner primary"></div>
+                        </div>
+                    </div>
+                    <!-- <button class="secondary" >WPS</button> -->
                     <label for="modal-control-wps" onclick="wps()" class="button tertiary">WPS</label>
                     <input type="checkbox" id="modal-control-wps" class="modal">
                     <div>
