@@ -284,7 +284,8 @@ Project Link: [https://github.com/dianlight/SmartTemp](https://github.com/dianli
 <!-- ACKNOWLEDGEMENTS -->
 ## Acknowledgements
 
-***!Work in progress!***
+Icons made by <a href="https://www.flaticon.com/authors/pixel-perfect" title="Pixel perfect">Pixel perfect</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a>
+
 <!--
 * [RobTillaart](https://github.com/RobTillaart/) for the Arduino libraries
 * [soligen2010](https://github.com/soligen2010/) for the ClickEncoder fork

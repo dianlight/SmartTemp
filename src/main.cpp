@@ -64,8 +64,6 @@ void setup()
 
   Serial.begin(74880);
 
-  //myConfig = Config();
-
   #ifdef DEBUG_I2C_SCAN
     delay(500);
     scanI2C();

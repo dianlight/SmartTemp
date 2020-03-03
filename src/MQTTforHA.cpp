@@ -15,7 +15,7 @@ void MQTTforHA::callback(char* topic, byte* payload, unsigned int length) {
   #endif 
 
   if(strstr(topic,"targetTempCmd") != NULL){
-    myConfig.get()->targetTemp[myConfig.get()->hold] = atof((char *)payload) - (myConfig.get()->away?myConfig.get()->awayModify:0);
+    thermostat.setCurrentTarget(atof((char *)payload));
   } else if(strstr(topic,"thermostatModeCmd") != NULL){
     for (byte i = 0; i < Config::MODES::M_SIZE; i++){
       if(memcmp(payload,myConfig.MODES_MQTT_NAME[i],3) == 0){
@@ -31,9 +31,8 @@ void MQTTforHA::callback(char* topic, byte* payload, unsigned int length) {
       }
     }
   } else if(strstr(topic,"awayModeCmd") != NULL){
-    myConfig.get()->away = (payload[1] == 'N');
+    thermostat.setAway((payload[1] == 'N'));
   }
-  myConfig.saveConfig();
   sendMQTTState();
 }
 

@@ -8,17 +8,10 @@
 #include <AsyncJson.h>
 #include "Display.h"
 #include "Config.h"
+#include "Thermostat.h"
 
 
 #include "web_static/web_server_static_files.h"
-
-/*
-void EvoWebserver::handleDisplayData(AsyncWebServerRequest *request) {
-  AsyncResponseStream *response = request->beginResponseStream("image/x‑portable‑bitmap",10240U);
-  display.screeshot(*response);
-  request->send(response);
-}
-*/
 
 void EvoWebserver::handleDisplayBmpData(AsyncWebServerRequest *request) {
   AsyncResponseStream *response = request->beginResponseStream("image/x‑portable‑bitmap");
@@ -128,6 +121,9 @@ void EvoWebserver::handleOstatData(AsyncWebServerRequest *request){
         root["otab"] = "home";
       #endif
       //root["bdg"] = "";
+      root["hold"] = CURRENT_HOLD_STR;
+      root["away"] = thermostat.getAway();
+      root["mode"] = CURRENT_MODE_STR;
     }
 
     AsyncResponseStream *response = request->beginResponseStream("application/json");
@@ -172,12 +168,14 @@ void EvoWebserver::handleScanWifiData(AsyncWebServerRequest *request){
 void EvoWebserver::handleSaveWifiData(AsyncWebServerRequest *request){
   debugI("Ricevuta chiamata di WifiSave!");
   debugI("Ricevuti %d parametri",request->args());
-  for(size_t i=0; i< request->args(); i++){
-      debugI("%s=%s",request->argName(i).c_str(), request->arg(i).c_str());
-  }
+  #ifdef DEBUG_WEBSERVER
+    for(size_t i=0; i< request->args(); i++){
+        debugD("%s=%s",request->argName(i).c_str(), request->arg(i).c_str());
+    }
+  #endif
   WiFi.persistent(true);
   bool ok = WiFi.begin(request->arg("ssid"),request->arg("wkey"));
-  debugD("Connessone %s -> AP %s ",ok?"SUCCESS":"FAIL",request->arg("ssid").c_str());
+  debugI("Connessone %s -> AP %s ",ok?"SUCCESS":"FAIL",request->arg("ssid").c_str());
   if(ok){
     WiFi.mode(WIFI_STA);
     WiFi.setAutoConnect(true);
@@ -194,6 +192,34 @@ void EvoWebserver::handleWPSData(AsyncWebServerRequest *request){
 
   request->send(204);
 }
+
+void EvoWebserver::handleCmdData(AsyncWebServerRequest *request){
+  String value = request->arg("value");
+  if(request->arg("cmd") == "mode"){
+    for (byte i = 0; i < Config::MODES::M_SIZE; i++){
+      if(value == String(myConfig.MODES_NAME[i])){
+        thermostat.setMode((Config::MODES)i);
+        break;  
+      }
+    }
+  } else if(request->arg("cmd") == "hold"){
+    String value = request->arg("value");
+    for (byte i = 0; i < Config::HOLDS::H_SIZE; i++){
+       if(value == String(myConfig.HOLDS_NAME[i])){
+        thermostat.setHold((Config::HOLDS)i);
+        break;  
+      }
+    }
+  } else if(request->arg("cmd") == "away"){
+    bool value = request->arg("value").equalsIgnoreCase("True");
+    thermostat.setAway(value);
+  } else {
+    debugE("Unknown command %s",request->arg("cmd").c_str());
+    request->send(504);
+  }
+  request->send(204);
+}
+
 
 
 bool EvoWebserver::handleFileRead(AsyncWebServerRequest *request){  // send the right file to the client (if it exists)
@@ -298,6 +324,7 @@ EvoWebserver::EvoWebserver(){
     MDNS.addService("http", "tcp", 80);   // Web server
 
     server.on("/ostat",HTTP_GET,std::bind(&EvoWebserver::handleOstatData,this,std::placeholders::_1));
+    server.on("/cmd",HTTP_GET,std::bind(&EvoWebserver::handleCmdData,this,std::placeholders::_1));
     server.on("/load",HTTP_GET,std::bind(&EvoWebserver::handleLoadData,this,std::placeholders::_1));
     server.on("/save",HTTP_POST, std::bind(&EvoWebserver::handleSaveData,this,std::placeholders::_1));
     server.on("/loadP",HTTP_GET, std::bind(&EvoWebserver::handleLoadProgramData,this,std::placeholders::_1));
@@ -306,7 +333,6 @@ EvoWebserver::EvoWebserver(){
     server.on("/scanW",HTTP_GET, std::bind(&EvoWebserver::handleScanWifiData,this,std::placeholders::_1));
     server.on("/saveW",HTTP_POST, std::bind(&EvoWebserver::handleSaveWifiData,this,std::placeholders::_1));
     server.on("/wps",HTTP_GET, std::bind(&EvoWebserver::handleWPSData,this,std::placeholders::_1));
-//    server.on("/screen",HTTP_GET, std::bind(&EvoWebserver::handleDisplayData,this,std::placeholders::_1));
     server.on("/screenpbm",HTTP_GET, std::bind(&EvoWebserver::handleDisplayBmpData,this,std::placeholders::_1));
    
     server.onNotFound([this](AsyncWebServerRequest *request) {                              // If the client requests any URI

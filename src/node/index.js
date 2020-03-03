@@ -1,11 +1,11 @@
-import "mini.css/dist/mini-default.css"
+import "mini.css/src/flavors/mini-default.scss"
+//import "mini.css/src/flavors/mini-dark.scss"
+//import "mini.css/src/flavors/mini-nord.scss"
+import "./flaticon.lineal.font"
+import "./debug.css"
 import "./holds.css"
 import "./climate.less"
 import "./favicon.ico"
-
-import "xterm/css/xterm.css"
-import { Terminal } from 'xterm';
-import { FitAddon } from 'xterm-addon-fit';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
 import $ from "cash-dom";
@@ -139,14 +139,14 @@ function change(day, hq) {
 
 window.change = change;
 
-const term = new Terminal();
-
-function show(what) {
+function show(currentPanel) {
     $(".panel").hide();
     $('header a').removeClass('bordered');
     $("#saveButtons").hide();
     $("#connectButtons").hide();
-    currentPanel = what;
+    $("footer").show();
+    $("#" + currentPanel + "Tab").toggleClass("bordered");
+    $("#" + currentPanel).show();
     if (currentPanel == "home") {
         refreshDisplayFromMap();
     } else if (currentPanel == "program") {
@@ -160,10 +160,9 @@ function show(what) {
         reloadWifi();
     } else if (currentPanel == "debug") {
         clearTimeout(displayTimeout);
-        term.scrollToBottom();
+        $("footer").hide();
+        $("#debug-view")[0].scrollTop = $("#debug-view")[0].scrollHeight;
     }
-    $("#" + what + "Tab").toggleClass("bordered");
-    $("#" + what).show();
 }
 window.show = show;
 
@@ -216,7 +215,7 @@ function refreshDisplayFromMap() {
                     break;
                 }
             }
-            console.log("BPM Size " + x_size + "x" + y_size);
+            //console.log("BPM Size " + x_size + "x" + y_size);
 
             let ctx = $("#screen")[0].getContext('2d');
             ctx.fillStyle = 'rgb(0, 0, 0)';
@@ -238,44 +237,70 @@ function refreshDisplayFromMap() {
     oReq.send(null);
 }
 
-$().ready(function() {
+function cmd(button) {
+    fetch("cmd?cmd=" + $(button).attr("id").split("-")[0] + "&value=" + $(button).val())
+        .then(result => reloadOstat(false))
+        .catch(err => console.error(err));
+}
 
-    // Debug
-    const fitAddon = new FitAddon();
-    term.loadAddon(fitAddon);
-    term.open($("#terminal")[0]);
-    fitAddon.fit();
-    term.writeln('Console \x1B[1;3;31mconnecting...\x1B[0m');
+window.cmd = cmd;
 
+function reloadOstat(changePage = false) {
     // StartPage
     fetch("ostat")
         .then(response => response.json())
         .then(data => {
-            console.log(data, "First tab", data.otab);
-            show(data.otab);
-            if (data.bdg) {
-                alert(data.bdg);
+            if (changePage) {
+                console.log(data, "First tab", data.otab);
+                show(data.otab);
+                if (data.bdg) {
+                    alert(data.bdg);
+                }
             }
+            $("button[id|='mode'],button[id|='hold'],button[id|='away']").removeClass("primary").removeClass("secondary").removeClass("tertiary");
+            $("button[id|='mode'][value='" + data.mode + "']").addClass($("button[id|='mode'][value='" + data.mode + "']").data('onclass'));
+            $("button[id|='hold'][value='" + data.hold + "']").addClass($("button[id|='hold'][value='" + data.hold + "']").data('onclass'));
+            $("#away-" + (data.away ? "on" : 'off')).addClass("primary");
         })
         .catch(err => console.error(err));
+}
+
+function debug(message) {
+    $("#debug-view").val($("#debug-view").val() + message);
+    if ($("#autoscroll").is(":checked")) {
+        $("#debug-view")[0].scrollTop = $("#debug-view")[0].scrollHeight;
+    }
+}
+
+
+$().ready(function() {
+
+    reloadOstat(true);
 
     // WebSockets
     var debug_service = new ReconnectingWebSocket('ws://' + window.location.host + '/log');
     debug_service.onmessage = function(event) {
-        // console.log("Messaggio",event);
-        term.write(event.data);
+        //        console.log("Messaggio", event);
+        debug(event.data);
     }
     debug_service.onopen = function(event) {
-        // console.log(event);
-        term.writeln('\x1B[1;3;31mConnected\x1B[0m');
+        //        console.log(event);
+        debug('Connected\n');
         debug_service.send("CSL");
     }
     debug_service.onclose = function() {
-        term.writeln('\x1B[1;3;31mDisconnected\x1B[0m');
+        debug('Disconnected\n');
     }
     debug_service.onerror = function() {
-        term.writeln('\x1B[1;3;31mError!\x1B[0m');
+        debug('Error!\n');
     }
+    $("#debug-view").on("scroll", (elem) => {
+        //    console.log(elem);
+        //    console.log($("#debug-view")[0].scrollTop + $("#debug-view").height(), $("#debug-view")[0].scrollHeight)
+        if ($("#debug-view")[0].scrollTop + $("#debug-view").height() <= $("#debug-view")[0].scrollHeight - 4) {
+            $("#autoscroll")[0].checked = false;
+        }
+    });
 
 
     var scan_service = new ReconnectingWebSocket('ws://' + window.location.host + '/scan');

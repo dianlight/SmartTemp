@@ -14,7 +14,7 @@ void Thermostat::_loopThermostat(){
         && (!myConfig.get()->away  || myConfig.get()->awayMode == Config::MODES::AUTO )
         && myConfig.get()->hold == Config::MODES::MANUAL 
         && millis() - _manualTime > myConfig.get()->returnAutoTimeout * 1000){
-            myConfig.get()->hold = Config::MODES::AUTO;
+            setMode(Config::MODES::AUTO);
     } 
 
     // Heater control
@@ -35,41 +35,11 @@ void Thermostat::_loopThermostat(){
                 _heatingCallback(false);
             _switchLastTime = millis();
         }
-        /* 
-        else {
-            #ifdef DEBUG_EVENT
-                debugD("Const Relay %s\n",heating?"On":"Off");
-                at8gw.setRelay(heating);
-            #endif
-        }
-        */
     }
 }
 
-void Thermostat::setHeatingCallback(HeatingCallback heatingCallback){
-    _heatingCallback = heatingCallback;
-}
-
-void Thermostat::setMode(Config::MODES mode){
-    myConfig.get()->mode = mode;
-    if(myConfig.get()->mode == Config::MANUAL){
-        _manualTime = millis();
-    }
-}
-
-void Thermostat::setHold(Config::HOLDS hold){
-    myConfig.get()->hold = hold;
-    myConfig.get()->mode = Config::MANUAL;
-    _manualTime = millis();
-}
 
 
-float Thermostat::getCurrentTarget(){
-    return (myConfig.get()->targetTemp[CURRENT_HOLD] + 
-            ( 
-                myConfig.get()->away?myConfig.get()->awayModify:0 
-            ));
-}
 
 Thermostat thermostat;
         

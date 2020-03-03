@@ -3,6 +3,8 @@ const CompressionPlugin = require('compression-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const HtmlReplaceWebpackPlugin = require('html-replace-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 let read = 0;
 let genv, gargv;
@@ -19,6 +21,12 @@ var config = {
         //    publicPath: "/"
     },
     plugins: [
+        new MiniCssExtractPlugin({
+            // Options similar to the same options in webpackOptions.output
+            // both options are optional
+            filename: '[name].css',
+            chunkFilename: '[id].css',
+        }),
         new HtmlWebpackPlugin({
             template: '!!html-loader!src/node/index.html',
         }),
@@ -41,11 +49,33 @@ var config = {
                     return eval(command);
                 }
             }
-        ])
+        ]),
+        //        new BundleAnalyzerPlugin({
+        //            analyzerMode: "disabled",
+        //           generateStatsFile: false
+        //        }),
     ],
     module: {
-        rules: [
-            { test: /\.css(\?mtime=\d+)?$/i, use: ['style-loader', 'css-loader'] },
+        rules: [{
+                test: /\.font\.js/,
+                use: [
+                    MiniCssExtractPlugin.loader,
+                    'css-loader',
+                    'webfonts-loader'
+                ]
+            },
+            {
+                test: /\.css(\?mtime=\d+)?$/i,
+                use: [process.env.NODE_ENV !== 'production' ?
+                    'style-loader' :
+                    MiniCssExtractPlugin.loader, {
+                        loader: 'css-loader',
+                        options: {
+                            sourceMap: process.env.NODE_ENV !== 'production',
+                        },
+                    },
+                ]
+            },
             {
                 test: /\.jpe?g$|\.ico$|\.gif$|\.png$|\.svg$|\.woff$|\.ttf$|\.wav$|\.mp3$/,
                 loader: 'file-loader?name=[name].[ext]' // <- retain original file name
@@ -67,7 +97,7 @@ var config = {
                     {
                         loader: 'html-loader',
                         options: {
-                            minimize: true,
+                            minimize: process.env.NODE_ENV === 'production',
                             interpolate: true,
                             esModule: false,
                             attrs: ['img:src', 'link:href', 'iframe:src'],
@@ -80,18 +110,49 @@ var config = {
                 use: [
                     "source-map-loader",
                 ],
+                enforce: "pre"
             },
             {
                 test: /\.less$/,
                 use: [
-                    'style-loader', 'css-loader',
+                    process.env.NODE_ENV !== 'production' ?
+                    'style-loader' :
+                    MiniCssExtractPlugin.loader, {
+                        loader: 'css-loader',
+                        options: {
+                            sourceMap: process.env.NODE_ENV !== 'production',
+                        },
+                    },
                     { loader: 'less-loader' }, // compiles Less to CSS
                 ]
+            },
+            {
+                test: /\.s[ac]ss$/i,
+                use: [
+                    process.env.NODE_ENV !== 'production' ?
+                    'style-loader' :
+                    MiniCssExtractPlugin.loader,
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            sourceMap: process.env.NODE_ENV !== 'production',
+                        },
+                    },
+                    {
+                        loader: 'sass-loader',
+                        options: {
+                            sourceMap: process.env.NODE_ENV !== 'production',
+                            sassOptions: {
+                                outputStyle: 'compressed',
+                            }
+                        },
+                    },
+                ],
             },
         ]
     },
     optimization: {
-        minimize: true,
+        minimize: process.env.NODE_ENV === 'production',
         minimizer: [new TerserPlugin()],
     },
     devServer: {
@@ -120,7 +181,10 @@ var config = {
                     console.log("--> %s", msg);
                     ws.send(msg);
                 });
-                ws.send('hello!');
+                ws.send('hello!\n');
+                setInterval(() => {
+                    ws.send("[Debug] bool EvoWebserver::handleFileRead(AsyncWebServerRequest*) handleFileRead: /favicon.ico smarttemp.local [EvoWebserver.cpp:227]\n");
+                }, 1000);
             });
 
             var wss = new WebSocket.Server({ port: 9002 });
@@ -133,10 +197,17 @@ var config = {
                 //  ws.send('hello!');
             });
 
+            let mode = "Auto";
+            let hold = "Confort";
+            let away = true
+
             app.get('/ostat', function(req, res) {
                 res.json({
                     "otab": "home",
                     //          "bdg": "Wifi not configured"
+                    "mode": mode,
+                    "hold": hold,
+                    "away": away,
                 });
             });
 
@@ -201,7 +272,17 @@ var config = {
                 res.sendFile(path.join(__dirname, 'test/screenpbm' + (read++ % 2) + '.pbm'));
             });
 
-            // Post functions
+            // exec functions
+            app.get("/cmd", function(req, res) {
+                if (req.query.cmd === 'mode') {
+                    mode = req.query.value;
+                } else if (req.query.cmd === 'hold') {
+                    hold = req.query.value;
+                } else if (req.query.cmd === 'away') {
+                    away = req.query.value === 'true';
+                }
+                res.sendStatus(204);
+            });
 
         }
     }
@@ -212,8 +293,8 @@ module.exports = (env, argv) => {
     genv = env;
     gargv = argv;
 
-    if (argv.mode === 'development') {
-        config.devtool = 'source-map';
+    if (argv.mode !== 'production') {
+        config.devtool = 'inline-source-map';
         //    config.devtool = 'inline-source-map';    
         //    config.plugins.push( new webpack.SourceMapDevToolPlugin({}));    
     }
@@ -221,6 +302,8 @@ module.exports = (env, argv) => {
     if (argv.mode === 'production') {
         config.plugins.push(new CompressionPlugin({
             deleteOriginalAssets: true,
+            // test: /\.js$|\.html$|\.jpe?g$|\.ico$|\.gif$|\.png$|\.svg$|\.woff$|\.ttf$|\.wav$|\.mp3$|\.eot$/i,
+            // include: /\.woff2?$/
             //      exclude: /\.html$/,
         }));
     }

@@ -36,6 +36,7 @@ class EvoWebserver: public EvoStopable {
         void handleSaveData(AsyncWebServerRequest *request);
         void handleSaveProgramData(AsyncWebServerRequest *request);
         bool handleFileRead(AsyncWebServerRequest *request);
+        void handleCmdData(AsyncWebServerRequest *request);
         void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
 
         void sendScanResult(int networksFound);

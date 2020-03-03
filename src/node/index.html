@@ -55,13 +55,18 @@
                     </div>
                     <div class="section">
                         <div class="button-group">
-                            <button class="primary small">&orarr;</button>
-                            <button class="primary small">&olarr;</button>
+                            <button id="mode-auto" onclick="cmd(this)" data-onclass="primary" value="Auto"><span class="flaticon flaticon-calendar"></span></button>
+                            <button id="mode-manual" onclick="cmd(this)" data-onclass="primary" value="Manual"><span class="flaticon flaticon-heat"></span></button>
+                            <button id="mode-off" onclick="cmd(this)" data-onclass="primary" value="Off"><span class="flaticon flaticon-off"></span></button>
                         </div>
                         <div class="button-group">
-                            <button class="secondary small">&DownArrow;</button>
-                            <button class="tertiary small">&Darr;</button>
-                            <button class="inverse small">&DownTeeArrow;</button>
+                            <button id="hold-eco" onclick="cmd(this)" data-onclass="tertiary" value="Eco"><span class="flaticon flaticon-leaf"></button>
+                            <button id="hold-normal" onclick="cmd(this)" data-onclass="primary" value="Normal"><span class="flaticon flaticon-normal"></button>
+                            <button id="hold-confort" onclick="cmd(this)" data-onclass="secondary" value="Confort"><span class="flaticon flaticon-slipper"></button>
+                        </div>
+                        <div class="button-group">
+                            <button id="away-on" onclick="cmd(this)" data-onclass="primary" value="true"><span class="flaticon flaticon-bag"></button>
+                            <button id="away-off" onclick="cmd(this)" data-onclass="primary" value="false"><span class="flaticon flaticon-home"></span></button>
                         </div>
                     </div>
                 </div>
@@ -268,7 +273,13 @@
 
     <!-- #ifdef DEBUG_REMOTE -->
     <div id="debug" class="panel" style="padding-left: 15px;">
-        <div id="terminal"></div>
+        <div class="row col-sm-12 debug">
+            <textarea id="debug-view" class="debug" placeholder="debug" readonly></textarea>
+        </div>
+        <div class="row col-sm-12">
+            <label for="sf1-check" class="doc">Autoscroll</label>
+            <input type="checkbox" autocomplete="off" id="autoscroll" class="doc"></input>
+        </div>
     </div>
     <!-- #endif -->
 
@@ -313,6 +324,11 @@
                     </div>
                 </div>
             </div>
+        </div>
+        <div class="row col-sm-12 hidden-sm">
+            <p>
+                Some Icons made by <a href="https://www.flaticon.com/authors/pixel-perfect" title="Pixel perfect">Pixel perfect</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a>
+            </p>
         </div>
     </footer>
 </body>
